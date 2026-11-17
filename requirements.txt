@@ -1,0 +1,14 @@
+# 微软云端神经 TTS 引擎
+edge-tts>=7.3.1
+soundfile
+
+# GUI 界面
+PySide6
+
+# 音频处理
+numpy
+pydub
+
+# 打包构建
+pyinstaller
+pillow

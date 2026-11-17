@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "project": "VoxLocal 跟读工作台",
+  "brief": "移除本地引擎后，基于 oil-ui 规范对左侧语音参数控制面板进行全新高质感重构",
+  "round": "01",
+  "nativeViewport": "340x740",
+  "candidates": [
+    {
+      "id": "studio-console",
+      "name": "方案 A：工业精密调音台",
+      "concept": "如专业广播级调音台般严谨紧凑，以机械按键、电平绿灯与精密推杆提供清晰触感反馈",
+      "typography": "ui-monospace, Consolas, Segoe UI",
+      "palette": ["#0b0f14", "#11161d", "#388bfd", "#3fb950", "#79c0ff"],
+      "traits": ["机械感双段切换器", "LED 在线指示", "刻度推杆与预设档位", "遥测技术注解"],
+      "source": "candidate-a.html",
+      "interactive": true
+    },
+    {
+      "id": "zen-atelier",
+      "name": "方案 B：极简温润学堂",
+      "concept": "去除机械杂质，以柔和深空陶质与呼吸感，让语言跟读回归人声与心流本身",
+      "typography": "PingFang SC, Segoe UI, sans-serif",
+      "palette": ["#0d1117", "#161c24", "#58a6ff", "#f0883e", "#e6edf3"],
+      "traits": ["温润呼吸胶囊", "声音导师卡片与头像", "语义化跟读步频提示", "研习建议小贴士"],
+      "source": "candidate-b.html",
+      "interactive": true
+    },
+    {
+      "id": "cyber-fluent",
+      "name": "方案 C：现代声波流光工作台",
+      "concept": "以动态声波频谱、半透明流光玻璃态与霓虹微交互，激发敏捷高效的口语跟读节奏",
+      "typography": "Inter, Roboto, sans-serif",
+      "palette": ["#07090e", "#0e1526", "#6366f1", "#06b6d4", "#22d3ee"],
+      "traits": ["动态声波频谱动画", "霓虹流光分段器", "角色快速标签", "频谱渐变推杆"],
+      "source": "candidate-c.html",
+      "interactive": true
+    }
+  ]
+}

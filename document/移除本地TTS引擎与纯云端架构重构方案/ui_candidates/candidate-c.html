@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 C - 现代声波流光工作台</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background-color: #07090e;
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Inter", sans-serif;
+    font-size: 13px;
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  .cyber-panel {
+    width: 312px;
+    background: linear-gradient(180deg, #0e1526 0%, #0a0f1d 100%);
+    border: 1px solid rgba(99, 102, 241, 0.28);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* 顶部发光微晕 */
+  .cyber-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #6366f1, #06b6d4, transparent);
+  }
+
+  /* 顶部声波频谱头 */
+  .cyber-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cyber-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wave-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 16px;
+  }
+  .bar {
+    width: 3px;
+    background: #06b6d4;
+    border-radius: 1px;
+    animation: waveAnim 1.2s ease-in-out infinite alternate;
+  }
+  .bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+  .bar:nth-child(2) { height: 14px; animation-delay: 0.3s; background: #6366f1; }
+  .bar:nth-child(3) { height: 9px; animation-delay: 0.2s; }
+  .bar:nth-child(4) { height: 16px; animation-delay: 0.4s; background: #6366f1; }
+  .bar:nth-child(5) { height: 8px; animation-delay: 0.15s; }
+
+  @keyframes waveAnim {
+    0% { height: 4px; }
+    100% { height: 16px; }
+  }
+
+  .cyber-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: 0.3px;
+  }
+  .cyber-badge {
+    background: rgba(6, 182, 212, 0.12);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    color: #22d3ee;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+  }
+
+  /* 分组标题 */
+  .section-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* 霓虹分段选择器 */
+  .neon-segment {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .neon-btn {
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    padding: 9px 0;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .neon-btn:hover {
+    color: #f8fafc;
+  }
+  .neon-btn.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(6, 182, 212, 0.2) 100%);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.25);
+  }
+
+  /* 发音角色卡 */
+  .voice-card {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+    border-radius: 10px;
+    padding: 10px 12px;
+    position: relative;
+  }
+  .voice-select-cyber {
+    width: 100%;
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+  .voice-select-cyber option {
+    background: #0f172a;
+    color: #f8fafc;
+  }
+  .voice-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(51, 65, 85, 0.4);
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .voice-tag {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+
+  /* 语速频谱推杆 */
+  .rate-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .rate-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .rate-badge {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .cyber-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #6366f1, #06b6d4);
+    outline: none;
+    cursor: pointer;
+  }
+  .cyber-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 3px solid #06b6d4;
+    box-shadow: 0 0 10px #06b6d4;
+    cursor: grab;
+    transition: transform 0.1s;
+  }
+  .cyber-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  .quick-chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .chip {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.8);
+    border-radius: 6px;
+    color: #94a3b8;
+    padding: 6px 0;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .chip:hover {
+    color: #f8fafc;
+    border-color: #38bdf8;
+  }
+  .chip.active {
+    background: rgba(6, 182, 212, 0.18);
+    border-color: #06b6d4;
+    color: #22d3ee;
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
+  }
+
+  /* 底部技术参数卡片 */
+  .neural-card {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(6, 182, 212, 0.05) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+  .neural-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #818cf8;
+    font-weight: 700;
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="cyber-panel">
+  <!-- 头部频谱与徽标 -->
+  <div class="cyber-header">
+    <div class="cyber-title-group">
+      <div class="wave-bars">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <span class="cyber-title">语音调谐中心</span>
+    </div>
+    <span class="cyber-badge">NEURAL CLOUD</span>
+  </div>
+
+  <!-- 1. 目标语种分段 -->
+  <div>
+    <div class="section-tag">
+      <span>语种通道</span>
+      <span style="color:#64748b;">ACTIVE</span>
+    </div>
+    <div class="neon-segment">
+      <button class="neon-btn active" id="btn-en" onclick="setLang('en')">
+        🇬🇧 英语 (EN)
+      </button>
+      <button class="neon-btn" id="btn-ja" onclick="setLang('ja')">
+        🇯🇵 日语 (JA)
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. 发音角色卡 -->
+  <div>
+    <div class="section-tag">
+      <span>神经网络角色</span>
+      <span class="voice-tag" id="voice-tag">推荐自然音</span>
+    </div>
+    <div class="voice-card">
+      <select class="voice-select-cyber" id="cyber-select" onchange="onVoiceChange()">
+        <!-- 动态生成 -->
+      </select>
+      <div class="voice-meta-row">
+        <span id="voice-accent">美式英语 · 女声</span>
+        <span style="color:#38bdf8;">24kHz 声学模型</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 语速与步进 -->
+  <div>
+    <div class="section-tag">
+      <span>跟读步频</span>
+      <span style="color:#64748b;">SPEED</span>
+    </div>
+    <div class="rate-box">
+      <div class="rate-header">
+        <span style="color:#94a3b8; font-size:12px;">语流速率</span>
+        <span class="rate-badge" id="rate-badge">1.0×</span>
+      </div>
+      <input type="range" min="50" max="200" value="100" class="cyber-slider" id="cyber-slider" oninput="onCyberSlider(this.value)">
+      <div class="quick-chips">
+        <button class="chip" id="c-08" onclick="applyRate(80)">0.8× 细磨</button>
+        <button class="chip active" id="c-10" onclick="applyRate(100)">1.0× 标准</button>
+        <button class="chip" id="c-12" onclick="applyRate(120)">1.2× 冲刺</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 声学规格注解 -->
+  <div class="neural-card">
+    <div class="neural-head">
+      <span>⚡</span>
+      <span>微软神经语流渲染</span>
+    </div>
+    端到端深度神经网络直通，提供拟真连读音变与停顿韵律，跟读延迟低至 120ms。
+  </div>
+</div>
+
+<script>
+  const VOICES = {
+    en: [
+      { id: "aria", name: "Aria (US Female, 默认)", accent: "美式英语 · 女声", tag: "首选推荐" },
+      { id: "jenny", name: "Jenny (US Female, 日常)", accent: "美式英语 · 女声", tag: "自然口语" },
+      { id: "guy", name: "Guy (US Male, 沉稳)", accent: "美式英语 · 男声", tag: "播音典范" },
+      { id: "ryan", name: "Ryan (GB Male, 纯正)", accent: "英式英语 · 男声", tag: "伦敦腔调" }
+    ],
+    ja: [
+      { id: "nanami", name: "Nanami (JA Female, 默认)", accent: "标准日语 · 女声", tag: "首选推荐" },
+      { id: "keita", name: "Keita (JA Male, 阳光)", accent: "标准日语 · 男声", tag: "自然对话" },
+      { id: "aoi", name: "Aoi (JA Female, 清澈)", accent: "标准日语 · 女声", tag: "甜美声线" }
+    ]
+  };
+
+  let currentLang = 'en';
+
+  function renderVoiceOptions() {
+    const sel = document.getElementById('cyber-select');
+    sel.innerHTML = '';
+    const list = VOICES[currentLang];
+    list.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = v.name;
+      sel.appendChild(opt);
+    });
+    updateMeta();
+  }
+
+  function updateMeta() {
+    const sel = document.getElementById('cyber-select');
+    const list = VOICES[currentLang];
+    const selected = list[sel.selectedIndex] || list[0];
+    document.getElementById('voice-accent').textContent = selected.accent;
+    document.getElementById('voice-tag').textContent = selected.tag;
+  }
+
+  function onVoiceChange() {
+    updateMeta();
+  }
+
+  function setLang(l) {
+    currentLang = l;
+    document.getElementById('btn-en').classList.toggle('active', l === 'en');
+    document.getElementById('btn-ja').classList.toggle('active', l === 'ja');
+    renderVoiceOptions();
+  }
+
+  function onCyberSlider(val) {
+    const r = (val / 100).toFixed(1);
+    document.getElementById('rate-badge').textContent = r + '×';
+    document.getElementById('c-08').classList.toggle('active', val == 80);
+    document.getElementById('c-10').classList.toggle('active', val == 100);
+    document.getElementById('c-12').classList.toggle('active', val == 120);
+  }
+
+  function applyRate(val) {
+    document.getElementById('cyber-slider').value = val;
+    onCyberSlider(val);
+  }
+
+  renderVoiceOptions();
+</script>
+
+</body>
+</html>

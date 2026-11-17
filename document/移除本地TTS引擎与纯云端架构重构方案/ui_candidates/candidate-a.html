@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 A - 工业精密调音台</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background-color: #0b0f14;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Microsoft YaHei", monospace, sans-serif;
+    font-size: 13px;
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  .console-panel {
+    width: 312px;
+    background: #11161d;
+    border: 1px solid #242c38;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  /* 顶部硬件状态条 */
+  .status-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: #0d1117;
+    border: 1px solid #1f2733;
+    border-radius: 6px;
+  }
+  .status-label {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #79c0ff;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .led-indicator {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #3fb950;
+    box-shadow: 0 0 6px #3fb950;
+  }
+  .bus-tag {
+    font-size: 10px;
+    background: #1f2733;
+    color: #8b949e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  /* 标题与分区 */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #8b949e;
+    margin-bottom: 6px;
+  }
+
+  /* 机械感双段切换器 */
+  .rocker-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #0d1117;
+    border: 1px solid #212836;
+    border-radius: 6px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .rocker-btn {
+    border: none;
+    background: transparent;
+    color: #8b949e;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .rocker-btn:hover {
+    color: #e6edf3;
+    background: #161c24;
+  }
+  .rocker-btn.active {
+    background: #1f2733;
+    color: #58a6ff;
+    border: 1px solid #388bfd55;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* 发音角色下拉框 */
+  .select-wrapper {
+    position: relative;
+  }
+  .voice-select {
+    width: 100%;
+    appearance: none;
+    background: #0d1117;
+    border: 1px solid #26303f;
+    border-radius: 6px;
+    color: #e6edf3;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .voice-select:hover, .voice-select:focus {
+    border-color: #388bfd;
+  }
+  .select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #8b949e;
+    font-size: 10px;
+  }
+
+  /* 精密推杆语速控制 */
+  .slider-card {
+    background: #0d1117;
+    border: 1px solid #1f2733;
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .slider-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .slider-val {
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #58a6ff;
+    background: #16202c;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid #388bfd33;
+  }
+  .fader-track {
+    width: 100%;
+    height: 6px;
+    background: #1f2733;
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+  }
+  .fader-progress {
+    height: 100%;
+    width: 33.3%;
+    background: #388bfd;
+    border-radius: 3px;
+  }
+  .fader-handle {
+    position: absolute;
+    top: 50%;
+    left: 33.3%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 18px;
+    background: #e6edf3;
+    border: 2px solid #388bfd;
+    border-radius: 3px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    cursor: grab;
+  }
+  .scale-marks {
+    display: flex;
+    justify-content: space-between;
+    color: #484f58;
+    font-size: 9px;
+    font-family: monospace;
+    margin-top: 8px;
+  }
+
+  /* 档位预设按键 */
+  .preset-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .preset-btn {
+    background: #141b24;
+    border: 1px solid #232c38;
+    border-radius: 4px;
+    color: #8b949e;
+    padding: 6px 0;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .preset-btn:hover {
+    color: #e6edf3;
+    border-color: #388bfd55;
+  }
+  .preset-btn.active {
+    background: #1c2b3d;
+    color: #58a6ff;
+    border-color: #388bfd;
+  }
+
+  /* 底部硬件遥测注脚 */
+  .telemetry-card {
+    background: #090d12;
+    border: 1px solid #19212c;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 11px;
+    color: #7d8590;
+    line-height: 1.5;
+  }
+  .telemetry-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #8b949e;
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<div class="console-panel">
+  <!-- 顶部状态指示条 -->
+  <div class="status-strip">
+    <div class="status-label">
+      <span class="led-indicator"></span>
+      EDGE-TTS // NEURAL
+    </div>
+    <span class="bus-tag">CLOUD BUS</span>
+  </div>
+
+  <!-- 1. 语种选择 -->
+  <div>
+    <div class="section-header">
+      <span>Target Language</span>
+      <span style="color:#484f58;">[CH-01]</span>
+    </div>
+    <div class="rocker-group">
+      <button class="rocker-btn active" id="btn-en" onclick="selectLang('en')">
+        <span>🇬🇧</span> EN-US
+      </button>
+      <button class="rocker-btn" id="btn-ja" onclick="selectLang('ja')">
+        <span>🇯🇵</span> JA-JP
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. 语音选择 -->
+  <div>
+    <div class="section-header">
+      <span>Voice Track</span>
+      <span style="color:#484f58;">[24kHz HD]</span>
+    </div>
+    <div class="select-wrapper">
+      <select class="voice-select" id="voice-select" onchange="onVoiceChange()">
+        <!-- 由脚本动态填充 -->
+      </select>
+      <div class="select-arrow">▼</div>
+    </div>
+  </div>
+
+  <!-- 3. 语速与推杆 -->
+  <div>
+    <div class="section-header">
+      <span>Playback Rate</span>
+      <span style="color:#484f58;">[CADENCE]</span>
+    </div>
+    <div class="slider-card">
+      <div class="slider-top">
+        <span style="color:#8b949e; font-size:11px;">Speed Multiplier</span>
+        <span class="slider-val" id="speed-display">1.0×</span>
+      </div>
+      <div class="fader-track" id="slider-track" onclick="onTrackClick(event)">
+        <div class="fader-progress" id="fader-fill" style="width: 33.3%;"></div>
+        <div class="fader-handle" id="fader-thumb" style="left: 33.3%;"></div>
+      </div>
+      <div class="scale-marks">
+        <span>0.5×</span>
+        <span>0.8×</span>
+        <span>1.0×</span>
+        <span>1.5×</span>
+        <span>2.0×</span>
+      </div>
+
+      <div class="preset-row">
+        <button class="preset-btn" id="p-08" onclick="setSpeed(0.8)">0.8× 慢速</button>
+        <button class="preset-btn active" id="p-10" onclick="setSpeed(1.0)">1.0× 标准</button>
+        <button class="preset-btn" id="p-12" onclick="setSpeed(1.2)">1.2× 挑战</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 底部声学状态卡 -->
+  <div class="telemetry-card">
+    <div class="telemetry-title">
+      <span>⚡</span>
+      <span>微软云端神经直通总线</span>
+    </div>
+    高保真多音字与连续语流引擎，支持逐句智能断句换气与重音还原。
+  </div>
+</div>
+
+<script>
+  const VOICES = {
+    en: [
+      { id: "en-US-AriaNeural", name: "Aria (US Female, 默认)" },
+      { id: "en-US-JennyNeural", name: "Jenny (US Female, 自然)" },
+      { id: "en-US-GuyNeural", name: "Guy (US Male, 沉稳男声)" },
+      { id: "en-GB-RyanNeural", name: "Ryan (GB Male, 英音男声)" },
+      { id: "en-GB-SoniaNeural", name: "Sonia (GB Female, 英音女声)" }
+    ],
+    ja: [
+      { id: "ja-JP-NanamiNeural", name: "Nanami (JA Female, 默认)" },
+      { id: "ja-JP-KeitaNeural", name: "Keita (JA Male, 青年男声)" },
+      { id: "ja-JP-AoiNeural", name: "Aoi (JA Female, 甜美女声)" },
+      { id: "ja-JP-DaichiNeural", name: "Daichi (JA Male, 播音男声)" }
+    ]
+  };
+
+  let currentLang = 'en';
+  let currentSpeed = 1.0;
+
+  function populateVoices() {
+    const sel = document.getElementById('voice-select');
+    sel.innerHTML = '';
+    VOICES[currentLang].forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = v.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function selectLang(lang) {
+    currentLang = lang;
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
+    populateVoices();
+  }
+
+  function setSpeed(speed) {
+    currentSpeed = speed;
+    document.getElementById('speed-display').textContent = speed.toFixed(1) + '×';
+    // 0.5 ~ 2.0 映射到 0% ~ 100%
+    const pct = ((speed - 0.5) / 1.5) * 100;
+    document.getElementById('fader-fill').style.width = pct + '%';
+    document.getElementById('fader-thumb').style.left = pct + '%';
+
+    document.getElementById('p-08').classList.toggle('active', Math.abs(speed - 0.8) < 0.05);
+    document.getElementById('p-10').classList.toggle('active', Math.abs(speed - 1.0) < 0.05);
+    document.getElementById('p-12').classList.toggle('active', Math.abs(speed - 1.2) < 0.05);
+  }
+
+  function onTrackClick(e) {
+    const rect = document.getElementById('slider-track').getBoundingClientRect();
+    const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const speed = 0.5 + pos * 1.5;
+    setSpeed(Math.round(speed * 10) / 10);
+  }
+
+  function onVoiceChange() {}
+
+  // 初始化
+  populateVoices();
+</script>
+
+</body>
+</html>

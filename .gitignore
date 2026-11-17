@@ -1,0 +1,36 @@
+# 构建与打包产物
+build/
+dist/
+bin/
+*.spec
+build_output.log
+
+# Python 虚拟环境与字节码缓存
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# 临时日志与测试音频产物
+*.log
+*.tmp
+test_*.mp3
+test_*.wav
+
+# 本地数据库与环境变量
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+.env
+.env.*
+
+# 编辑器与系统文件
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

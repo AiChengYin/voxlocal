@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 B - 极简温润学堂</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background-color: #0d1117;
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  .atelier-panel {
+    width: 312px;
+    background: #161c24;
+    border: 1px solid #283344;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  /* 顶部优雅呼吸胶囊 */
+  .zen-badge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .zen-panel-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f0f6fc;
+    letter-spacing: -0.2px;
+  }
+  .zen-capsule {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(46, 160, 67, 0.12);
+    border: 1px solid rgba(46, 160, 67, 0.35);
+    color: #3fb950;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .zen-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3fb950;
+  }
+
+  /* 分组标签 */
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .label-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8b949e;
+  }
+  .label-sub {
+    font-size: 11px;
+    color: #6e7681;
+  }
+
+  /* 柔和圆润分段控制器 */
+  .pill-segment {
+    display: flex;
+    background: #0d1218;
+    border: 1px solid #212936;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 4px;
+  }
+  .pill-opt {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #8b949e;
+    padding: 8px 0;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .pill-opt:hover {
+    color: #e6edf3;
+  }
+  .pill-opt.active {
+    background: #232d3d;
+    color: #58a6ff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  /* 声音导师选择器 */
+  .persona-box {
+    background: #0d1218;
+    border: 1px solid #242e3f;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .persona-box:hover {
+    border-color: #58a6ff;
+  }
+  .persona-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .persona-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #1c2533;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: 1px solid #2d3b52;
+  }
+  .persona-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f0f6fc;
+  }
+  .persona-desc {
+    font-size: 11px;
+    color: #7d8590;
+    margin-top: 1px;
+  }
+  .persona-arrow {
+    color: #6e7681;
+    font-size: 11px;
+  }
+
+  /* 语速滑块卡片 */
+  .speed-card {
+    background: #0d1218;
+    border: 1px solid #212936;
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .speed-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .speed-num {
+    font-size: 16px;
+    font-weight: 700;
+    color: #58a6ff;
+  }
+  .speed-intent {
+    font-size: 11px;
+    color: #7d8590;
+  }
+
+  /* 滑块轨道 */
+  .range-wrap {
+    position: relative;
+    padding: 6px 0;
+  }
+  .zen-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 5px;
+    border-radius: 3px;
+    background: #212936;
+    outline: none;
+    cursor: pointer;
+  }
+  .zen-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #58a6ff;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    cursor: grab;
+    transition: transform 0.1s;
+  }
+  .zen-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  /* 药丸快捷步进 */
+  .pill-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .speed-pill {
+    background: #161e29;
+    border: 1px solid #232d3d;
+    border-radius: 20px;
+    color: #8b949e;
+    padding: 6px 0;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .speed-pill:hover {
+    color: #e6edf3;
+    border-color: #58a6ff;
+  }
+  .speed-pill.active {
+    background: rgba(88, 166, 255, 0.15);
+    border-color: #58a6ff;
+    color: #58a6ff;
+  }
+
+  /* 底部温润研习卡片 */
+  .tip-card {
+    background: rgba(240, 136, 62, 0.08);
+    border: 1px solid rgba(240, 136, 62, 0.22);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #d29922;
+  }
+  .tip-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tip-body {
+    color: #c9d1d9;
+    font-size: 11px;
+    opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+
+<div class="atelier-panel">
+  <!-- 顶部标题与轻量胶囊 -->
+  <div class="zen-badge-row">
+    <div class="zen-panel-title">语音跟读参数</div>
+    <div class="zen-capsule">
+      <span class="zen-dot"></span>
+      微软神经 · 实时就绪
+    </div>
+  </div>
+
+  <!-- 1. 目标语种分段选择 -->
+  <div>
+    <div class="label-row">
+      <span class="label-text">跟读语种</span>
+      <span class="label-sub">自动匹配母语语流</span>
+    </div>
+    <div class="pill-segment">
+      <button class="pill-opt active" id="btn-en" onclick="chooseLang('en')">
+        🇬🇧 英语跟读
+      </button>
+      <button class="pill-opt" id="btn-ja" onclick="chooseLang('ja')">
+        🇯🇵 日语跟读
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. 声音导师角色 -->
+  <div>
+    <div class="label-row">
+      <span class="label-text">声音导师</span>
+      <span class="label-sub" id="voice-count-sub">5 位母语发音</span>
+    </div>
+    <div class="persona-box" onclick="cycleVoice()">
+      <div class="persona-left">
+        <div class="persona-avatar" id="voice-avatar">👩</div>
+        <div>
+          <div class="persona-name" id="voice-name">Aria</div>
+          <div class="persona-desc" id="voice-desc">美式自然女声 · 亲和柔和 (默认)</div>
+        </div>
+      </div>
+      <div class="persona-arrow">切换 ❯</div>
+    </div>
+  </div>
+
+  <!-- 3. 跟读步频与语速 -->
+  <div>
+    <div class="label-row">
+      <span class="label-text">朗读步频</span>
+      <span class="label-sub">长按拖动调速</span>
+    </div>
+    <div class="speed-card">
+      <div class="speed-head">
+        <span class="speed-num" id="speed-label">1.0×</span>
+        <span class="speed-intent" id="speed-tip">标准母语真实对话</span>
+      </div>
+      <div class="range-wrap">
+        <input type="range" min="50" max="200" value="100" class="zen-slider" id="speed-slider" oninput="onSlider(this.value)">
+      </div>
+      <div class="pill-grid">
+        <button class="speed-pill" id="pill-08" onclick="applySpeed(80)">0.8× 慢速练习</button>
+        <button class="speed-pill active" id="pill-10" onclick="applySpeed(100)">1.0× 标准原速</button>
+        <button class="speed-pill" id="pill-12" onclick="applySpeed(120)">1.2× 敏捷挑战</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 研习建议卡片 -->
+  <div class="tip-card">
+    <div class="tip-title">
+      <span>💡</span> 跟读技巧建议
+    </div>
+    <div class="tip-body">
+      遇到长句复杂连读时，建议切换至 0.8× 细听辅音弱化与连音规律，形成肌肉记忆后再切回原速。
+    </div>
+  </div>
+</div>
+
+<script>
+  const PERSONAS = {
+    en: [
+      { name: "Aria", desc: "美式自然女声 · 亲和柔和 (默认)", avatar: "👩" },
+      { name: "Jenny", desc: "美式日常女声 · 连贯清晰", avatar: "👩" },
+      { name: "Guy", desc: "美式沉稳男声 · 播音质感", avatar: "👨" },
+      { name: "Ryan", desc: "英式标准男声 · 典雅纯正", avatar: "👨" },
+      { name: "Sonia", desc: "英式知性女声 · 语调自然", avatar: "👩" }
+    ],
+    ja: [
+      { name: "Nanami", desc: "日式标准女声 · 温柔清脆 (默认)", avatar: "👩" },
+      { name: "Keita", desc: "日式青年男声 · 阳光自然", avatar: "👨" },
+      { name: "Aoi", desc: "日式甜美女声 · 动漫质感", avatar: "👩" },
+      { name: "Daichi", desc: "日式沉着男声 · 新闻播报", avatar: "👨" }
+    ]
+  };
+
+  let lang = 'en';
+  let voiceIdx = 0;
+
+  function updateVoiceUI() {
+    const list = PERSONAS[lang];
+    const v = list[voiceIdx % list.length];
+    document.getElementById('voice-avatar').textContent = v.avatar;
+    document.getElementById('voice-name').textContent = v.name;
+    document.getElementById('voice-desc').textContent = v.desc;
+    document.getElementById('voice-count-sub').textContent = `${list.length} 位母语发音`;
+  }
+
+  function cycleVoice() {
+    voiceIdx = (voiceIdx + 1) % PERSONAS[lang].length;
+    updateVoiceUI();
+  }
+
+  function chooseLang(l) {
+    lang = l;
+    voiceIdx = 0;
+    document.getElementById('btn-en').classList.toggle('active', l === 'en');
+    document.getElementById('btn-ja').classList.toggle('active', l === 'ja');
+    updateVoiceUI();
+  }
+
+  function onSlider(val) {
+    const spd = (val / 100).toFixed(1);
+    document.getElementById('speed-label').textContent = spd + '×';
+    
+    let tip = "自定义语速";
+    if (val < 90) tip = "慢速精磨 · 听辨连读弱化";
+    else if (val <= 110) tip = "标准母语真实对话";
+    else tip = "进阶提速 · 强化听觉敏捷度";
+    document.getElementById('speed-tip').textContent = tip;
+
+    document.getElementById('pill-08').classList.toggle('active', val == 80);
+    document.getElementById('pill-10').classList.toggle('active', val == 100);
+    document.getElementById('pill-12').classList.toggle('active', val == 120);
+  }
+
+  function applySpeed(val) {
+    document.getElementById('speed-slider').value = val;
+    onSlider(val);
+  }
+
+  updateVoiceUI();
+</script>
+
+</body>
+</html>
