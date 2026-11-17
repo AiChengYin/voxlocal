@@ -96,14 +96,18 @@ def main():
     app.setApplicationName("VoxLocal")
     app.setOrganizationName("VoxLocal")
 
-    # ── 加载 QSS 主题 ──
-    qss_path = get_resource_path("assets/styles/theme.qss")
-    if os.path.exists(qss_path):
-        try:
-            with open(qss_path, "r", encoding="utf-8") as f:
-                app.setStyleSheet(f.read())
-        except Exception:
-            pass
+    # ── 加载 QSS 主题（方案 E：macOS × Notion 默认浅色，支持后续无刷新切换）──
+    try:
+        from src.ui.theme import DEFAULT_THEME, build_stylesheet
+        app.setStyleSheet(build_stylesheet(DEFAULT_THEME))
+    except Exception:
+        qss_path = get_resource_path("assets/styles/theme.qss")
+        if os.path.exists(qss_path):
+            try:
+                with open(qss_path, "r", encoding="utf-8") as f:
+                    app.setStyleSheet(f.read())
+            except Exception:
+                pass
 
     # ── 全局字体 ──
     font = QFont("Segoe UI", 10)

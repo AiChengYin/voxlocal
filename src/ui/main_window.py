@@ -27,6 +27,12 @@ from src.ui.text_input_panel import TextInputPanel
 from src.ui.voice_panel import VoiceParamPanel
 from src.ui.focus_read_panel import FocusReadPanel, StudyStage
 from src.ui.status_bar import StatusBarWidget
+from src.ui.theme import (
+    DEFAULT_THEME,
+    apply_theme,
+    apply_windows_titlebar_theme,
+    normalize_theme,
+)
 from src.utils.paths import get_resource_path
 
 
@@ -87,11 +93,16 @@ class MainWindow(QMainWindow):
         self._synth_timer.timeout.connect(self._on_synth_tick)
         self._synth_start_time = 0.0
         self._synth_current_stage = ""
+        self._theme: str = DEFAULT_THEME
 
         self._setup_ui()
         self._init_engine()
         self._init_settings()
         self._connect_signals()
+
+    @property
+    def current_theme(self) -> str:
+        return self._theme
 
     # ──────────────────────────────── UI 构建 ────────────────────────────────
 
@@ -129,8 +140,9 @@ class MainWindow(QMainWindow):
 
         # Tab 0: 📝 课文文本库
         tab_input_widget = QWidget()
+        tab_input_widget.setObjectName("transparent_box")
         tab_input_layout = QVBoxLayout(tab_input_widget)
-        tab_input_layout.setContentsMargins(12, 12, 12, 12)
+        tab_input_layout.setContentsMargins(0, 0, 0, 0)
         tab_input_layout.setSpacing(12)
 
         self.text_input = TextInputPanel()
@@ -169,51 +181,85 @@ class MainWindow(QMainWindow):
     def _build_header(self) -> QWidget:
         header = QWidget()
         header.setObjectName("header")
-        header.setFixedHeight(60)
-        header.setStyleSheet("""
-            QWidget#header {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #0d1117, stop:0.5 #0d1a35, stop:1 #0d1117);
-                border-bottom: 1px solid #21262d;
-            }
-        """)
+        header.setFixedHeight(56)
         layout = QHBoxLayout(header)
-        layout.setContentsMargins(24, 0, 24, 0)
+        layout.setContentsMargins(22, 0, 22, 0)
+        layout.setSpacing(10)
 
         # Logo 区
         logo_label = QLabel("🎙️")
-        logo_label.setStyleSheet("font-size: 24px; background: transparent;")
+        logo_label.setStyleSheet("font-size: 20px; background: transparent;")
         layout.addWidget(logo_label)
 
         title_label = QLabel("VoxLocal")
-        title_label.setStyleSheet("""
-            font-size: 18px;
-            font-weight: 700;
-            color: #e6edf3;
-            letter-spacing: 1px;
-            background: transparent;
-        """)
+        title_label.setObjectName("header_title")
         layout.addWidget(title_label)
 
         subtitle = QLabel("逐行循环跟读工作台")
-        subtitle.setStyleSheet("""
-            font-size: 12px;
-            color: #484f58;
-            margin-left: 4px;
-            background: transparent;
-        """)
+        subtitle.setObjectName("header_subtitle")
         layout.addWidget(subtitle)
         layout.addStretch()
 
-        ver_label = QLabel("v1.1 · Shadowing Edition")
-        ver_label.setStyleSheet("""
-            color: #484f58;
-            font-size: 11px;
-            background: transparent;
-        """)
-        layout.addWidget(ver_label)
+        # 浅色 / 深色主题无缝切换器
+        theme_box = QFrame()
+        theme_box.setObjectName("theme_switch_box")
+        theme_box.setFixedHeight(32)
+        theme_layout = QHBoxLayout(theme_box)
+        theme_layout.setContentsMargins(3, 3, 3, 3)
+        theme_layout.setSpacing(2)
+
+        self.btn_theme_light = QPushButton("☀️ 浅色")
+        self.btn_theme_light.setObjectName("theme_btn_active")
+        self.btn_theme_light.setFixedHeight(24)
+        self.btn_theme_light.setCursor(Qt.PointingHandCursor)
+        self.btn_theme_light.setToolTip("切换为 macOS × Notion 极简浅色风")
+        self.btn_theme_light.clicked.connect(lambda: self.set_theme("light"))
+        theme_layout.addWidget(self.btn_theme_light)
+
+        self.btn_theme_dark = QPushButton("🌙 深色")
+        self.btn_theme_dark.setObjectName("theme_btn_inactive")
+        self.btn_theme_dark.setFixedHeight(24)
+        self.btn_theme_dark.setCursor(Qt.PointingHandCursor)
+        self.btn_theme_dark.setToolTip("切换为 macOS 极简深色风")
+        self.btn_theme_dark.clicked.connect(lambda: self.set_theme("dark"))
+        theme_layout.addWidget(self.btn_theme_dark)
+
+        layout.addWidget(theme_box, 0, Qt.AlignVCenter)
+
+        ver_label = QLabel("v1.2 · Shadowing")
+        ver_label.setObjectName("header_version")
+        ver_label.setFixedHeight(24)
+        layout.addWidget(ver_label, 0, Qt.AlignVCenter)
 
         return header
+
+    def set_theme(self, mode: str, persist: bool = True):
+        """无缝切换全局浅色/深色主题并持久化配置"""
+        normalized = normalize_theme(mode)
+        self._theme = normalized
+        if persist:
+            self._db.set_setting("ui_theme", normalized)
+
+        if normalized == "dark":
+            self.btn_theme_dark.setObjectName("theme_btn_active")
+            self.btn_theme_light.setObjectName("theme_btn_inactive")
+        else:
+            self.btn_theme_light.setObjectName("theme_btn_active")
+            self.btn_theme_dark.setObjectName("theme_btn_inactive")
+
+        for btn in (self.btn_theme_light, self.btn_theme_dark):
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+
+        app = QApplication.instance()
+        apply_theme(app, normalized, window=self)
+        self.voice_panel.set_theme(normalized)
+        self.focus_read_panel.set_theme(normalized)
+        self.status_bar_widget.set_theme(normalized)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        apply_windows_titlebar_theme(self, self._theme)
 
     # ──────────────────────────────── 信号连接 ────────────────────────────────
 
@@ -292,6 +338,10 @@ class MainWindow(QMainWindow):
         except (TypeError, ValueError):
             saved_target = 3
         self.focus_read_panel.set_target_read_count(saved_target, emit_signal=False)
+
+        # 加载 UI 主题配置 (light / dark，默认 light)
+        saved_theme = self._db.get_setting("ui_theme", DEFAULT_THEME)
+        self.set_theme(saved_theme, persist=False)
 
     def _on_language_changed(self, lang: str):
         self._db.set_setting("target_language", lang)

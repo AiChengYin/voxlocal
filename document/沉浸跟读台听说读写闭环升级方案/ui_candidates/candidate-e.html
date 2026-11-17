@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 E · macOS × Notion 极简原生浅色工作台 (Apple Design)</title>
+<style>
+  :root {
+    --bg-desktop: #f3f4f6;
+    --bg-window: #ffffff;
+    --bg-toolbar: rgba(255, 255, 255, 0.82);
+    --bg-subtle: #f7f7f8;
+    --bg-hover: #efefef;
+    --border-hairline: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.14);
+    --ink-1: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #9ca3af;
+    --sys-blue: #007aff;
+    --sys-blue-soft: rgba(0, 122, 255, 0.09);
+    --sys-red: #ff3b30;
+    --sys-red-soft: rgba(255, 59, 48, 0.09);
+    --sys-purple: #8944ab;
+    --sys-purple-soft: rgba(137, 68, 171, 0.08);
+    --sys-green: #248a3d;
+    --sys-green-soft: rgba(40, 167, 69, 0.1);
+    --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-desktop);
+    color: var(--ink-1);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  /* macOS 原生极简窗口容器 */
+  .mac-window {
+    width: 880px;
+    max-width: 100%;
+    background: var(--bg-window);
+    border-radius: 16px;
+    border: 1px solid var(--border-hairline);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 20px 50px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 顶部半透明 macOS Titlebar / Breadcrumb */
+  .mac-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--bg-toolbar);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border-hairline);
+    gap: 12px;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, transform 100ms ease-out;
+  }
+  .btn-ghost:hover:not(:disabled) { background: var(--bg-subtle); color: var(--ink-1); }
+  .btn-ghost:active:not(:disabled) { transform: scale(0.97); }
+  .btn-ghost:disabled { opacity: 0.36; cursor: not-allowed; }
+
+  /* Notion 极简分段路径 */
+  .notion-steps {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-subtle);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-hairline);
+  }
+  .n-step {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-variant-numeric: tabular-nums;
+    transition: all 220ms var(--spring);
+  }
+  .n-step.active {
+    background: #ffffff;
+    color: var(--ink-1);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  .n-step.done { color: var(--sys-green); }
+  .n-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  .meta-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-mini {
+    width: 48px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+  .progress-mini-fill {
+    width: 40%;
+    height: 100%;
+    background: var(--sys-blue);
+    border-radius: 2px;
+  }
+
+  /* 中心主画布：Notion 式留白与清晰呼吸层级 */
+  .canvas-body {
+    padding: 28px 36px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-height: 310px;
+  }
+
+  .canvas-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .prop-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .prop-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-hairline);
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .prop-chip.live-rec {
+    background: var(--sys-red-soft);
+    border-color: rgba(255, 59, 48, 0.22);
+    color: var(--sys-red);
+    font-weight: 600;
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 7px;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    color: var(--ink-1);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    transition: background 120ms, transform 100ms ease-out;
+  }
+  .btn-outline:hover:not(:disabled) { background: var(--bg-subtle); }
+  .btn-outline:active:not(:disabled) { transform: scale(0.97); }
+  .btn-outline:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
+
+  /* 核心内容块 */
+  .focus-block {
+    margin: auto 0;
+  }
+
+  /* Notion Callout 风格的盲听遮罩 */
+  .notion-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px 22px;
+    border-radius: 12px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-hairline);
+    transition: all 280ms var(--spring);
+  }
+  .notion-callout.rec-active {
+    background: #fff8f8;
+    border-color: rgba(255, 59, 48, 0.22);
+  }
+  .callout-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: #ffffff;
+    border: 1px solid var(--border-hairline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sys-blue);
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .rec-active .callout-icon { color: var(--sys-red); }
+  .callout-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--ink-1);
+  }
+  .callout-desc {
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .native-sentence {
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1.38;
+    letter-spacing: -0.022em;
+    color: var(--ink-1);
+    padding: 6px 0;
+  }
+
+  /* S3 Notion 极简输入框 */
+  .write-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .lock-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--sys-purple-soft);
+    color: var(--sys-purple);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .notion-textarea {
+    width: 100%;
+    min-height: 104px;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 13px 15px;
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    color: var(--ink-1);
+    resize: none;
+    outline: none;
+    transition: border-color 140ms, box-shadow 140ms;
+  }
+  .notion-textarea:focus {
+    border-color: var(--sys-purple);
+    box-shadow: 0 0 0 3px rgba(137, 68, 171, 0.14);
+  }
+
+  /* S4 Notion 极简对比块 */
+  .diff-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .diff-item {
+    border-radius: 10px;
+    border: 1px solid var(--border-hairline);
+    background: var(--bg-subtle);
+    padding: 11px 14px;
+  }
+  .diff-item.ref {
+    background: #f8fbff;
+    border-color: rgba(0, 122, 255, 0.22);
+  }
+  .diff-kicker {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-3);
+    margin-bottom: 3px;
+  }
+  .diff-item.ref .diff-kicker { color: var(--sys-blue); }
+  .diff-content {
+    font-size: 15.5px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  .d-ok { color: #1a7f37; }
+  .d-err { color: #cf222e; background: #ffebe9; text-decoration: line-through; padding: 0 4px; border-radius: 4px; }
+  .d-fix { color: #9a6700; background: #fff3cd; font-weight: 600; padding: 0 4px; border-radius: 4px; }
+
+  /* 状态反馈行 + 极简录音格 */
+  .status-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-hairline);
+    font-size: 12.5px;
+    color: var(--ink-2);
+  }
+  .status-line.ok { color: var(--sys-green); font-weight: 500; }
+  .status-line.rec { color: var(--sys-red); font-weight: 500; }
+  .status-line.warn { color: #b45309; font-weight: 500; }
+
+  .rec-bars {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .rec-bar {
+    width: 16px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(15, 23, 42, 0.1);
+    transition: background 200ms ease;
+  }
+  .rec-bar.filled { background: var(--sys-green); }
+
+  /* 音频细轨 + 底部原生控制栏 */
+  .mac-footer {
+    background: var(--bg-subtle);
+    border-top: 1px solid var(--border-hairline);
+    padding: 10px 20px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .scrubber-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .track {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(15, 23, 42, 0.1);
+    overflow: hidden;
+  }
+  .track-fill {
+    width: 45%;
+    height: 100%;
+    background: var(--sys-blue);
+    border-radius: 2px;
+  }
+  .time-lbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .bar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* macOS 原生主按钮 */
+  .btn-native-primary {
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 8px;
+    border: none;
+    background: var(--sys-blue);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 1px 2px rgba(0, 122, 255, 0.25);
+    transition: transform 100ms ease-out, filter 120ms ease;
+  }
+  .btn-native-primary:hover:not(:disabled) { filter: brightness(1.06); }
+  .btn-native-primary:active:not(:disabled) { transform: scale(0.97); }
+  .btn-native-primary:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
+  .btn-native-primary.rec { background: var(--sys-red); box-shadow: 0 1px 3px rgba(255, 59, 48, 0.28); }
+  .btn-native-primary.write { background: var(--sys-purple); box-shadow: 0 1px 3px rgba(137, 68, 171, 0.28); }
+  .btn-native-primary.ok { background: var(--sys-green); box-shadow: 0 1px 3px rgba(36, 138, 61, 0.28); }
+
+  .kbd-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.22);
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .btn-outline .kbd-hint {
+    background: var(--bg-subtle);
+    color: var(--ink-3);
+    border: 1px solid var(--border-hairline);
+  }
+
+  .native-param {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink-2);
+    background: #ffffff;
+    border: 1px solid var(--border-hairline);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .native-param input[type=range] { width: 68px; accent-color: var(--sys-blue); cursor: pointer; }
+  .mac-stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border-hairline);
+    border-radius: 6px;
+    background: var(--bg-subtle);
+    overflow: hidden;
+  }
+  .mac-stepper button {
+    width: 22px; height: 22px; border: none; background: transparent;
+    color: var(--ink-1); font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .mac-stepper button:hover:not(:disabled) { background: #e5e7eb; }
+  .mac-stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .mac-stepper span { padding: 0 7px; font-weight: 600; color: var(--ink-1); }
+
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Showcase Mode */
+  body.showcase { padding: 22px 28px; align-items: flex-start; }
+  .showcase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 1280px;
+  }
+  .showcase-hero { grid-column: 1 / -1; }
+  .showcase-tag {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+  }
+  .showcase .mac-window { width: 100%; }
+  .showcase .showcase-hero .canvas-body { padding: 20px 28px 16px; gap: 16px; min-height: 230px; }
+  .showcase .mini-mac .canvas-body { padding: 16px 20px 14px; gap: 12px; min-height: 195px; }
+</style>
+</head>
+<body>
+<div id="interactive-root">
+  <div class="mac-window">
+    <div class="mac-toolbar">
+      <button class="btn-ghost">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        文本库
+      </button>
+
+      <div class="notion-steps" id="e-steps">
+        <div class="n-step active"><span class="n-dot"></span>听 · 盲听</div>
+        <div class="n-step"><span class="n-dot"></span>说 · <span id="e-rc">0/3</span></div>
+        <div class="n-step"><span class="n-dot"></span>写 · 默写</div>
+        <div class="n-step"><span class="n-dot"></span>检 · 对照</div>
+      </div>
+
+      <div class="meta-right">
+        <div class="progress-mini"><div class="progress-mini-fill"></div></div>
+        <span>第 2 / 5 句 · 第 1 轮</span>
+      </div>
+    </div>
+
+    <div class="canvas-body">
+      <div class="canvas-head">
+        <div class="prop-badges">
+          <span class="prop-chip" id="e-loop-chip">● 随机循环 · 第 2 遍</span>
+          <span class="prop-chip" id="e-rec-chip">开口目标 0/3</span>
+        </div>
+        <button class="btn-outline" id="e-reveal">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span id="e-rev-txt">显示原文</span>
+          <span class="kbd-hint">V</span>
+        </button>
+      </div>
+
+      <div class="focus-block">
+        <!-- S1/RECORDING/S2 -->
+        <div id="e-listen">
+          <div class="notion-callout" id="e-blind">
+            <div class="callout-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+            </div>
+            <div>
+              <div class="callout-title">盲听中，请专注听音输入…</div>
+              <div class="callout-desc">先听清句子结构与连读韵律，再点击下方「开始录音」开口跟读；如需核对文字可随时按 V 切换显示原文。</div>
+            </div>
+          </div>
+          <div class="native-sentence hidden" id="e-orig">
+            Consistency turns small daily practice into effortless fluency.
+          </div>
+        </div>
+
+        <!-- S3 -->
+        <div id="e-write" class="write-block hidden">
+          <span class="lock-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            防作弊模式 · 已隐藏原文并暂停全部音频
+          </span>
+          <textarea class="notion-textarea" id="e-input" placeholder="凭听音与开口记忆默写当前句子…"></textarea>
+        </div>
+
+        <!-- S4 -->
+        <div id="e-review" class="diff-stack hidden">
+          <div class="diff-item">
+            <div class="diff-kicker">我的输入</div>
+            <div class="diff-content"><span class="d-ok">Consistency turns small daily </span><span class="d-err">practise</span><span class="d-ok"> into effortless fluency.</span></div>
+          </div>
+          <div class="diff-item ref">
+            <div class="diff-kicker">正确原文</div>
+            <div class="diff-content"><span class="d-ok">Consistency turns small daily </span><span class="d-fix">practice</span><span class="d-ok"> into effortless fluency.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-line" id="e-status">
+        <span id="e-status-txt">正在盲听循环朗读原音，请点击下方「开始录音」完成朗读任务</span>
+        <div class="rec-bars" id="e-bars"></div>
+      </div>
+    </div>
+
+    <div class="mac-footer">
+      <div class="scrubber-strip">
+        <div class="track"><div class="track-fill"></div></div>
+        <span class="time-lbl">0:02 / 0:05</span>
+      </div>
+
+      <div class="action-bar">
+        <div class="bar-group">
+          <button class="btn-outline" id="e-play">暂停 <span class="kbd-hint">Space</span></button>
+          <button class="btn-outline" id="e-replay">重播本句</button>
+          <button class="btn-outline hidden" id="e-replay-rec">回放我的录音</button>
+        </div>
+
+        <div class="bar-group">
+          <button class="btn-outline hidden" id="e-retry">重新输入</button>
+          <button class="btn-native-primary" id="e-main">开始录音 (0/3) <span class="kbd-hint">R</span></button>
+        </div>
+
+        <div class="bar-group">
+          <div class="native-param">
+            <span>停顿</span>
+            <input type="range" id="e-gap" min="5" max="50" value="10">
+            <span id="e-gap-v" style="color:var(--sys-blue);font-weight:600;">1.0s</span>
+          </div>
+          <div class="native-param">
+            <span>目标</span>
+            <div class="mac-stepper">
+              <button id="e-dec">−</button><span id="e-tv">3</span><button id="e-inc">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const es = { stage:'S1', rec:0, target:3, rev:false, hasRec:false, sec:0, timer:null };
+const $ = id => document.getElementById(id);
+
+function syncE() {
+  const s = es.stage;
+  $('e-listen').classList.toggle('hidden', s === 'S3' || s === 'S4');
+  $('e-write').classList.toggle('hidden', s !== 'S3');
+  $('e-review').classList.toggle('hidden', s !== 'S4');
+  $('e-blind').classList.toggle('hidden', es.rev);
+  $('e-orig').classList.toggle('hidden', !es.rev);
+  $('e-rev-txt').textContent = es.rev ? '隐藏原文' : '显示原文';
+  $('e-reveal').disabled = s === 'S3' || s === 'S4';
+
+  const canAudio = s === 'S1' || s === 'S2';
+  $('e-play').disabled = !canAudio;
+  $('e-replay').disabled = !canAudio;
+  $('e-replay-rec').classList.toggle('hidden', !es.hasRec);
+  $('e-replay-rec').disabled = !canAudio;
+  $('e-dec').disabled = s === 'RECORDING' || es.target <= 3;
+  $('e-inc').disabled = s === 'RECORDING' || es.target >= 10;
+  $('e-tv').textContent = es.target;
+  $('e-rc').textContent = `${es.rec}/${es.target}`;
+  $('e-rec-chip').textContent = `开口进度 ${es.rec}/${es.target}`;
+  $('e-rec-chip').classList.toggle('live-rec', s === 'RECORDING');
+
+  const idxMap = { S1:0, RECORDING:1, S2:1, S3:2, S4:3 };
+  document.querySelectorAll('#e-steps .n-step').forEach((el, i) => {
+    el.classList.toggle('active', i === idxMap[s]);
+    el.classList.toggle('done', i < idxMap[s]);
+  });
+
+  const bars = $('e-bars'); bars.innerHTML = '';
+  for (let i = 0; i < es.target; i++) {
+    const b = document.createElement('div');
+    b.className = 'rec-bar' + (i < es.rec ? ' filled' : '');
+    bars.appendChild(b);
+  }
+
+  $('e-retry').classList.toggle('hidden', s !== 'S4');
+  const m = $('e-main');
+  m.disabled = false;
+  m.className = 'btn-native-primary';
+  if (s === 'S1') m.innerHTML = `开始录音 (${es.rec}/${es.target}) <span class="kbd-hint">R</span>`;
+  else if (s === 'RECORDING') { m.classList.add('rec'); m.textContent = `结束录音 (${es.rec}/${es.target} · ${es.sec.toFixed(1)}s)`; }
+  else if (s === 'S2') { m.classList.add('write'); m.textContent = '写 · 进入默写'; }
+  else if (s === 'S3') { m.classList.add('write'); m.textContent = '提交默写'; m.disabled = !$('e-input').value.trim(); }
+  else if (s === 'S4') { m.classList.add('ok'); m.textContent = '确认 OK（下一句）'; }
+}
+
+if (!new URLSearchParams(location.search).get('mode')) {
+  $('e-reveal').onclick = () => { es.rev = !es.rev; syncE(); };
+  $('e-input').oninput = () => syncE();
+  $('e-main').onclick = () => {
+    if (es.stage === 'S1') {
+      es.stage = 'RECORDING'; es.sec = 0;
+      $('e-status').className = 'status-line rec';
+      $('e-status-txt').textContent = '正在录音采集… 清晰朗读 ≥ 1.0 秒后点击「结束录音」';
+      es.timer = setInterval(() => { es.sec += 0.1; syncE(); }, 100);
+    } else if (es.stage === 'RECORDING') {
+      clearInterval(es.timer); es.rec++; es.hasRec = true;
+      es.stage = es.rec >= es.target ? 'S2' : 'S1';
+      $('e-status').className = 'status-line ok';
+      $('e-status-txt').textContent = es.stage === 'S2' ? '录音次数已达标，点击「写 · 进入默写」' : `录音有效 (${es.sec.toFixed(1)}s)，已保存最新 1 条回放`;
+    } else if (es.stage === 'S2') {
+      es.rev = false; es.stage = 'S3'; $('e-input').value = '';
+      $('e-status').className = 'status-line';
+      $('e-status-txt').textContent = '防作弊默写：已隐藏原文并禁用所有音频播放';
+    } else if (es.stage === 'S3') {
+      es.stage = 'S4';
+      $('e-status').className = 'status-line';
+      $('e-status-txt').textContent = '请自检对照差异高亮：无误点「确认 OK」，需重练点「重新输入」';
+    } else if (es.stage === 'S4') {
+      es.stage = 'S1'; es.rec = 0; es.hasRec = false; es.rev = false;
+      $('e-status').className = 'status-line';
+      $('e-status-txt').textContent = '已随机切入下一句，正在盲听循环朗读…';
+    }
+    syncE();
+  };
+  $('e-retry').onclick = () => { es.rev = false; es.stage = 'S3'; $('e-input').value = ''; syncE(); };
+  $('e-dec').onclick = () => { es.target = Math.max(3, es.target - 1); if (es.stage === 'S1' && es.rec >= es.target) es.stage = 'S2'; syncE(); };
+  $('e-inc').onclick = () => { es.target = Math.min(10, es.target + 1); if (es.rec < es.target) es.stage = 'S1'; syncE(); };
+  $('e-gap').oninput = e => { $('e-gap-v').textContent = (e.target.value / 10).toFixed(1) + 's'; };
+  syncE();
+} else {
+  document.body.classList.add('showcase');
+  document.getElementById('interactive-root').innerHTML = `
+  <div class="showcase-grid">
+    <div class="showcase-hero">
+      <div class="showcase-tag">方案 E · macOS × Notion 极简原生浅色工作台 — S1 盲听 & 录音跟读态（主工作区）</div>
+      <div class="mac-window">
+        <div class="mac-toolbar">
+          <button class="btn-ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>文本库</button>
+          <div class="notion-steps">
+            <div class="n-step done"><span class="n-dot"></span>听 · 盲听</div>
+            <div class="n-step active"><span class="n-dot"></span>说 · 2/3</div>
+            <div class="n-step"><span class="n-dot"></span>写 · 默写</div>
+            <div class="n-step"><span class="n-dot"></span>检 · 对照</div>
+          </div>
+          <div class="meta-right"><div class="progress-mini"><div class="progress-mini-fill"></div></div><span>第 2 / 5 句 · 第 1 轮</span></div>
+        </div>
+        <div class="canvas-body">
+          <div class="canvas-head">
+            <div class="prop-badges">
+              <span class="prop-chip">● 随机循环 · 第 2 遍</span>
+              <span class="prop-chip live-rec">● 录音采集中 · 2.1s</span>
+            </div>
+            <button class="btn-outline"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>显示原文 <span class="kbd-hint">V</span></button>
+          </div>
+          <div class="focus-block">
+            <div class="notion-callout rec-active">
+              <div class="callout-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
+              <div>
+                <div class="callout-title">盲听开口跟读中 · 正在校验有效朗读（2.1s）</div>
+                <div class="callout-desc">原音已自动暂停，正在检测有效时长 (≥ 1.0s) 与人声底噪；完成后自动覆盖保留最近 1 次录音供回放对比。</div>
+              </div>
+            </div>
+          </div>
+          <div class="status-line rec"><span>正在录音 (2/3) — 再次点击「结束录音」即可完成本轮口语门禁</span><div class="rec-bars"><div class="rec-bar filled"></div><div class="rec-bar filled"></div><div class="rec-bar"></div></div></div>
+        </div>
+        <div class="mac-footer">
+          <div class="scrubber-strip"><div class="track"><div class="track-fill"></div></div><span class="time-lbl">0:02 / 0:05</span></div>
+          <div class="action-bar">
+            <div class="bar-group"><button class="btn-outline" disabled>暂停 <span class="kbd-hint">Space</span></button><button class="btn-outline" disabled>重播本句</button><button class="btn-outline" disabled>回放我的录音</button></div>
+            <div class="bar-group"><button class="btn-native-primary rec">结束录音 (2/3 · 2.1s)</button></div>
+            <div class="bar-group"><div class="native-param">停顿 <input type="range" value="10" disabled> <span style="color:var(--sys-blue);font-weight:600">1.0s</span></div><div class="native-param">目标 <div class="mac-stepper"><button disabled>−</button><span>3</span><button disabled>+</button></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S3 · 防作弊默写输入态（极简纯白画布，强锁原文与音频）</div>
+      <div class="mac-window mini-mac">
+        <div class="canvas-body">
+          <div class="canvas-head">
+            <span class="lock-pill">🔒 防作弊 · 原文与音频均已禁用</span>
+            <button class="btn-outline" disabled>显示原文 (已锁)</button>
+          </div>
+          <div class="write-block"><textarea class="notion-textarea" style="min-height:80px;font-size:15px;">Consistency turns small daily practise into effortless fluency.</textarea></div>
+          <div class="status-line"><span>空文本或纯空格禁止提交</span><div class="rec-bars"><div class="rec-bar filled"></div><div class="rec-bar filled"></div><div class="rec-bar filled"></div></div></div>
+        </div>
+        <div class="mac-footer" style="padding:10px 16px;">
+          <div class="action-bar">
+            <div class="bar-group"><button class="btn-outline" disabled>暂停</button><button class="btn-outline" disabled>重播</button></div>
+            <button class="btn-native-primary write" style="height:34px;">提交默写</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S4 · Notion 极简自检对照态（差异柔和标亮 + OK 直通下一句）</div>
+      <div class="mac-window mini-mac">
+        <div class="canvas-body">
+          <div class="canvas-head">
+            <span class="prop-chip" style="color:var(--sys-green);background:var(--sys-green-soft);border-color:rgba(40,167,69,0.2)">S4 · 默写自检对照</span>
+            <button class="btn-outline" disabled>已进入对照</button>
+          </div>
+          <div class="diff-stack">
+            <div class="diff-item"><div class="diff-kicker">我的输入</div><div class="diff-content" style="font-size:14.5px;"><span class="d-ok">Consistency turns small daily </span><span class="d-err">practise</span><span class="d-ok"> into effortless fluency.</span></div></div>
+            <div class="diff-item ref"><div class="diff-kicker">正确原文</div><div class="diff-content" style="font-size:14.5px;"><span class="d-ok">Consistency turns small daily </span><span class="d-fix">practice</span><span class="d-ok"> into effortless fluency.</span></div></div>
+          </div>
+          <div class="status-line ok"><span>差异已高亮供参考，满意即可确认直通下一随机句</span></div>
+        </div>
+        <div class="mac-footer" style="padding:10px 16px;">
+          <div class="action-bar">
+            <div class="bar-group"><button class="btn-outline" disabled>暂停</button><button class="btn-outline" disabled>重播</button></div>
+            <div class="bar-group"><button class="btn-outline">重新输入</button><button class="btn-native-primary ok" style="height:34px;">确认 OK（下一句）</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+</script>
+</body>
+</html>

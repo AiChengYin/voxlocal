@@ -60,7 +60,7 @@ class PlayerPanel(QWidget):
         ctrl_row.addWidget(self.btn_play)
 
         self.file_label = QLabel("尚未生成音频")
-        self.file_label.setStyleSheet("color: #484f58; font-size: 11px; background: transparent;")
+        self.file_label.setObjectName("char_count")
         self.file_label.setMaximumWidth(360)
         ctrl_row.addWidget(self.file_label, 1)
 

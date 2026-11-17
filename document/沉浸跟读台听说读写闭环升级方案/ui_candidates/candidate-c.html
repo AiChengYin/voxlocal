@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 C · Books 温润纸墨专注学堂 (Apple Design)</title>
+<style>
+  :root {
+    --paper-bg: #f5f2eb;
+    --card-bg: #ffffff;
+    --card-muted: #f9f8f5;
+    --ink-1: #1d1d1f;
+    --ink-2: #515154;
+    --ink-3: #86868b;
+    --hairline: rgba(60, 60, 67, 0.12);
+    --blue: #0071e3;
+    --blue-soft: rgba(0, 113, 227, 0.1);
+    --red: #d70015;
+    --red-soft: rgba(215, 0, 21, 0.09);
+    --purple: #8944ab;
+    --purple-soft: rgba(137, 68, 171, 0.1);
+    --green: #1e8e3e;
+    --green-soft: rgba(30, 142, 62, 0.11);
+    --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+    --font-reading: "New York", "Georgia", "Songti SC", "Noto Serif CJK SC", serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-ui);
+    background: #eae6dc;
+    color: var(--ink-1);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .book-window {
+    width: 880px;
+    max-width: 100%;
+    background: var(--paper-bg);
+    border-radius: 22px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 24px 64px rgba(38, 32, 20, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 20px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* 极简书页顶部栏 */
+  .book-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-back {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent; border: none; color: var(--blue);
+    font-size: 13.5px; font-weight: 500; cursor: pointer;
+    padding: 5px 8px; border-radius: 8px;
+    transition: background 140ms, transform 100ms ease-out;
+  }
+  .nav-back:hover { background: var(--blue-soft); }
+  .nav-back:active { transform: scale(0.96); }
+
+  .chapter-meta {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  }
+  .loop-track {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .loop-seg {
+    width: 26px; height: 4px; border-radius: 2px;
+    background: rgba(60, 60, 67, 0.14);
+    transition: background 280ms var(--spring), width 280ms var(--spring);
+  }
+  .loop-seg.active { background: var(--blue); width: 38px; }
+  .loop-seg.done { background: var(--green); }
+
+  /* 纸质主卡片 */
+  .page-card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    border: 1px solid var(--hairline);
+    box-shadow: 0 8px 28px rgba(32, 26, 16, 0.05);
+    padding: 24px 30px;
+    min-height: 290px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .page-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .stage-kicker {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .btn-paper {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 13px; border-radius: 999px;
+    background: var(--card-muted);
+    border: 1px solid var(--hairline);
+    color: var(--ink-1); font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    transition: transform 100ms ease-out, background 150ms;
+  }
+  .btn-paper:hover:not(:disabled) { background: #efede7; }
+  .btn-paper:active:not(:disabled) { transform: scale(0.96); }
+  .btn-paper:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .reading-center {
+    margin: auto 0;
+    padding: 16px 0;
+  }
+  .blind-folio {
+    padding: 24px 20px;
+    border-radius: 14px;
+    background: var(--card-muted);
+    border: 1px solid rgba(60, 60, 67, 0.08);
+    text-align: center;
+  }
+  .blind-folio h2 {
+    font-size: 19px; font-weight: 600; letter-spacing: -0.015em; color: var(--ink-1);
+    margin-bottom: 6px;
+  }
+  .blind-folio p {
+    font-size: 13px; color: var(--ink-3);
+  }
+
+  .serif-sentence {
+    font-family: var(--font-reading);
+    font-size: 28px;
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+    color: var(--ink-1);
+    text-align: left;
+  }
+
+  /* 默写纸页输入 */
+  .paper-write-area {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .cheat-lock-note {
+    font-size: 12px; font-weight: 600; color: var(--purple);
+    background: var(--purple-soft);
+    align-self: flex-start;
+    padding: 4px 11px; border-radius: 999px;
+  }
+  .paper-textarea {
+    width: 100%; min-height: 112px;
+    background: #fcfbf9;
+    border: 1.5px solid rgba(137, 68, 171, 0.3);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: var(--font-reading);
+    font-size: 19px; line-height: 1.5; color: var(--ink-1);
+    resize: none; outline: none;
+  }
+  .paper-textarea:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(137, 68, 171, 0.12);
+  }
+
+  /* 纸墨批改对比 */
+  .paper-diff-stack {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .paper-diff-row {
+    background: var(--card-muted);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 12px 15px;
+  }
+  .paper-diff-row label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--ink-3); letter-spacing: 0.04em; margin-bottom: 4px;
+  }
+  .paper-diff-row .txt {
+    font-family: var(--font-reading); font-size: 17px; line-height: 1.48;
+  }
+  .p-ok { color: #1a7f37; }
+  .p-err { color: #cf222e; background: #ffebe9; text-decoration: line-through; padding: 0 3px; border-radius: 3px; }
+  .p-fix { color: #9a6700; background: #fff8c5; font-weight: 700; padding: 0 3px; border-radius: 3px; }
+
+  .page-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline);
+    font-size: 12.5px; color: var(--ink-2);
+  }
+  .foot-status.rec { color: var(--red); font-weight: 600; }
+  .foot-status.ok { color: var(--green); font-weight: 600; }
+
+  .count-badges { display: flex; gap: 5px; }
+  .count-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1.5px solid rgba(60, 60, 67, 0.25);
+  }
+  .count-dot.filled { background: var(--green); border-color: var(--green); }
+
+  /* 底部整洁操作栏 */
+  .book-controls {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    padding: 12px 18px;
+    box-shadow: 0 4px 16px rgba(32, 26, 16, 0.04);
+  }
+  .ctrl-left, .ctrl-mid, .ctrl-right { display: flex; align-items: center; gap: 8px; }
+
+  .btn-primary-paper {
+    height: 40px; padding: 0 22px; border-radius: 999px; border: none;
+    font-size: 13.5px; font-weight: 600; cursor: pointer; color: #fff;
+    background: var(--blue);
+    transition: transform 100ms ease-out, opacity 150ms;
+  }
+  .btn-primary-paper:active:not(:disabled) { transform: scale(0.97); }
+  .btn-primary-paper:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary-paper.rec { background: var(--red); }
+  .btn-primary-paper.write { background: var(--purple); }
+  .btn-primary-paper.ok { background: var(--green); }
+
+  .setting-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  }
+  .setting-item input[type=range] { width: 70px; accent-color: var(--blue); }
+  .paper-stepper {
+    display: inline-flex; align-items: center;
+    border: 1px solid var(--hairline); border-radius: 8px; background: var(--card-muted);
+  }
+  .paper-stepper button {
+    width: 24px; height: 24px; border: none; background: transparent; cursor: pointer; font-weight: 600; color: var(--ink-1);
+  }
+  .paper-stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .paper-stepper span { padding: 0 8px; font-weight: 600; color: var(--ink-1); }
+
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Showcase */
+  body.showcase { padding: 28px; align-items: flex-start; }
+  .showcase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; width: 1280px; }
+  .showcase-hero { grid-column: 1 / -1; }
+  .showcase-tag { font-size: 12px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+  .showcase .book-window { width: 100%; }
+  .showcase .mini-book { padding: 16px 20px; gap: 12px; }
+  .showcase .mini-book .page-card { min-height: 215px; padding: 16px 20px; }
+</style>
+</head>
+<body>
+<div id="interactive-root">
+  <div class="book-window">
+    <div class="book-nav">
+      <button class="nav-back">‹ 返回文本库</button>
+      <div class="loop-track" id="c-track">
+        <div class="loop-seg active"></div>
+        <div class="loop-seg"></div>
+        <div class="loop-seg"></div>
+        <div class="loop-seg"></div>
+      </div>
+      <div class="chapter-meta">第 2 / 5 句 · 第 1 轮 (40%)</div>
+    </div>
+
+    <div class="page-card">
+      <div class="page-card-head">
+        <span class="stage-kicker" id="c-kicker">STAGE 1 · 盲听与跟读输入</span>
+        <button class="btn-paper" id="c-reveal">显示原文</button>
+      </div>
+
+      <div class="reading-center">
+        <div id="c-listen-box">
+          <div class="blind-folio" id="c-blind">
+            <h2>🎧 盲听中，请专注听音输入…</h2>
+            <p>先完整听懂句子重音与节奏，至少大声跟读 3 遍后即可解锁默写检验</p>
+          </div>
+          <div class="serif-sentence hidden" id="c-orig">
+            Consistency turns small daily practice into effortless fluency.
+          </div>
+        </div>
+
+        <div id="c-write-box" class="paper-write-area hidden">
+          <span class="cheat-lock-note">🔒 默写期间已隐藏原文并暂停全部音频</span>
+          <textarea class="paper-textarea" id="c-input" placeholder="凭记忆在此输入刚才跟读的句子…"></textarea>
+        </div>
+
+        <div id="c-review-box" class="paper-diff-stack hidden">
+          <div class="paper-diff-row">
+            <label>我的输入</label>
+            <div class="txt"><span class="p-ok">Consistency turns small daily </span><span class="p-err">practise</span><span class="p-ok"> into effortless fluency.</span></div>
+          </div>
+          <div class="paper-diff-row" style="border-color: rgba(0,113,227,0.28); background:#f5f9ff;">
+            <label style="color:var(--blue)">正确原文</label>
+            <div class="txt"><span class="p-ok">Consistency turns small daily </span><span class="p-fix">practice</span><span class="p-ok"> into effortless fluency.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-foot">
+        <span class="foot-status" id="c-status">正在第 2 遍循环原音 (0:02 / 0:05)</span>
+        <div class="count-badges" id="c-dots"></div>
+      </div>
+    </div>
+
+    <div class="book-controls">
+      <div class="ctrl-left">
+        <button class="btn-paper" id="c-play">⏸ 暂停</button>
+        <button class="btn-paper" id="c-replay">↺ 重播</button>
+        <button class="btn-paper hidden" id="c-replay-rec">🔊 回放录音</button>
+      </div>
+
+      <div class="ctrl-mid">
+        <button class="btn-paper hidden" id="c-retry">重新输入</button>
+        <button class="btn-primary-paper" id="c-main">🎙️ 开始录音 (0/3)</button>
+      </div>
+
+      <div class="ctrl-right">
+        <div class="setting-item">
+          <span>停顿</span>
+          <input type="range" id="c-gap" min="5" max="50" value="10">
+          <span id="c-gap-val">1.0s</span>
+        </div>
+        <div class="setting-item">
+          <span>目标</span>
+          <div class="paper-stepper">
+            <button id="c-dec">−</button><span id="c-tval">3</span><button id="c-inc">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cs = { stage: 'S1', rec: 0, target: 3, rev: false, hasRec: false, sec: 0, timer: null };
+const $ = id => document.getElementById(id);
+
+function syncC() {
+  const s = cs.stage;
+  $('c-listen-box').classList.toggle('hidden', s === 'S3' || s === 'S4');
+  $('c-write-box').classList.toggle('hidden', s !== 'S3');
+  $('c-review-box').classList.toggle('hidden', s !== 'S4');
+
+  $('c-blind').classList.toggle('hidden', cs.rev);
+  $('c-orig').classList.toggle('hidden', !cs.rev);
+  $('c-reveal').textContent = cs.rev ? '🙈 隐藏原文' : '👁️ 显示原文';
+  $('c-reveal').disabled = s === 'S3' || s === 'S4';
+
+  const canAudio = s === 'S1' || s === 'S2';
+  $('c-play').disabled = !canAudio;
+  $('c-replay').disabled = !canAudio;
+  $('c-replay-rec').classList.toggle('hidden', !cs.hasRec);
+  $('c-replay-rec').disabled = !canAudio;
+  $('c-dec').disabled = s === 'RECORDING' || cs.target <= 3;
+  $('c-inc').disabled = s === 'RECORDING' || cs.target >= 10;
+  $('c-tval').textContent = cs.target;
+
+  const segs = document.querySelectorAll('#c-track .loop-seg');
+  const idxMap = { S1: 0, RECORDING: 1, S2: 1, S3: 2, S4: 3 };
+  segs.forEach((el, i) => {
+    el.classList.toggle('active', i === idxMap[s]);
+    el.classList.toggle('done', i < idxMap[s]);
+  });
+
+  const dots = $('c-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < cs.target; i++) {
+    const d = document.createElement('div');
+    d.className = 'count-dot' + (i < cs.rec ? ' filled' : '');
+    dots.appendChild(d);
+  }
+
+  $('c-retry').classList.toggle('hidden', s !== 'S4');
+  const m = $('c-main');
+  m.disabled = false;
+  m.className = 'btn-primary-paper';
+  if (s === 'S1') m.textContent = `🎙️ 开始录音 (${cs.rec}/${cs.target})`;
+  else if (s === 'RECORDING') { m.classList.add('rec'); m.textContent = `⏹ 结束录音 (${cs.rec}/${cs.target} · ${cs.sec.toFixed(1)}s)`; }
+  else if (s === 'S2') { m.classList.add('write'); m.textContent = '✍️ 写 · 进入默写'; }
+  else if (s === 'S3') { m.classList.add('write'); m.textContent = '📩 提交默写'; m.disabled = !$('c-input').value.trim(); }
+  else if (s === 'S4') { m.classList.add('ok'); m.textContent = '✅ 确认 OK（下一句）'; }
+}
+
+if (!new URLSearchParams(location.search).get('mode')) {
+  $('c-reveal').onclick = () => { cs.rev = !cs.rev; syncC(); };
+  $('c-input').oninput = () => syncC();
+  $('c-main').onclick = () => {
+    if (cs.stage === 'S1') {
+      cs.stage = 'RECORDING'; cs.sec = 0;
+      $('c-status').textContent = '正在采集麦克风… 请朗读 ≥ 1.0 秒';
+      $('c-status').className = 'foot-status rec';
+      cs.timer = setInterval(() => { cs.sec += 0.1; syncC(); }, 100);
+    } else if (cs.stage === 'RECORDING') {
+      clearInterval(cs.timer); cs.rec++; cs.hasRec = true;
+      cs.stage = cs.rec >= cs.target ? 'S2' : 'S1';
+      $('c-status').textContent = cs.stage === 'S2' ? '已达标，请点击【写】进入默写' : `录音有效，进度 ${cs.rec}/${cs.target}`;
+      $('c-status').className = 'foot-status ok';
+    } else if (cs.stage === 'S2') {
+      cs.rev = false; cs.stage = 'S3'; $('c-input').value = '';
+      $('c-status').textContent = '默写阶段：已强锁原文与音频'; $('c-status').className = 'foot-status';
+    } else if (cs.stage === 'S3') {
+      cs.stage = 'S4';
+      $('c-status').textContent = '对照完成，点击确认 OK 直通下一句';
+    } else if (cs.stage === 'S4') {
+      cs.stage = 'S1'; cs.rec = 0; cs.hasRec = false; cs.rev = false;
+      $('c-status').textContent = '已随机切入下一句，正在盲听循环朗读…';
+    }
+    syncC();
+  };
+  $('c-retry').onclick = () => { cs.rev = false; cs.stage = 'S3'; $('c-input').value = ''; syncC(); };
+  $('c-dec').onclick = () => { cs.target = Math.max(3, cs.target - 1); if (cs.stage === 'S1' && cs.rec >= cs.target) cs.stage = 'S2'; syncC(); };
+  $('c-inc').onclick = () => { cs.target = Math.min(10, cs.target + 1); if (cs.rec < cs.target) cs.stage = 'S1'; syncC(); };
+  $('c-gap').oninput = e => { $('c-gap-val').textContent = (e.target.value / 10).toFixed(1) + 's'; };
+  syncC();
+} else {
+  document.body.classList.add('showcase');
+  document.getElementById('interactive-root').innerHTML = `
+  <div class="showcase-grid">
+    <div class="showcase-hero">
+      <div class="showcase-tag">方案 C · Books 温润纸墨专注学堂 — 护眼日间纸感（S1 原文展示 & 录音进度）</div>
+      <div class="book-window">
+        <div class="book-nav">
+          <button class="nav-back">‹ 返回文本库</button>
+          <div class="loop-track"><div class="loop-seg done"></div><div class="loop-seg active"></div><div class="loop-seg"></div><div class="loop-seg"></div></div>
+          <div class="chapter-meta">第 2 / 5 句 · 第 1 轮 (40%)</div>
+        </div>
+        <div class="page-card" style="min-height:245px;">
+          <div class="page-card-head"><span class="stage-kicker">STAGE 1 · 盲听与开口跟读（可随时显隐原文）</span><button class="btn-paper">🙈 隐藏原文</button></div>
+          <div class="reading-center">
+            <div class="serif-sentence">Consistency turns small daily practice into effortless fluency.</div>
+          </div>
+          <div class="page-foot"><span class="foot-status ok">✅ 录音有效！进度 2/3 次（支持点击回放对比）</span><div class="count-badges"><div class="count-dot filled"></div><div class="count-dot filled"></div><div class="count-dot"></div></div></div>
+        </div>
+        <div class="book-controls">
+          <div class="ctrl-left"><button class="btn-paper">⏸ 暂停</button><button class="btn-paper">↺ 重播</button><button class="btn-paper">🔊 回放我的录音</button></div>
+          <div class="ctrl-mid"><button class="btn-primary-paper">🎙️ 开始录音 (2/3)</button></div>
+          <div class="ctrl-right"><div class="setting-item">停顿 <input type="range" value="10" disabled> 1.0s</div><div class="setting-item">目标 <div class="paper-stepper"><button>−</button><span>3</span><button>+</button></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S3 · 纸页默写输入态（防作弊强制隐藏原文）</div>
+      <div class="book-window mini-book">
+        <div class="page-card">
+          <div class="page-card-head"><span class="stage-kicker">STAGE 3 · 默写输入</span><button class="btn-paper" disabled>👁️ 原文已锁</button></div>
+          <div class="paper-write-area"><span class="cheat-lock-note">🔒 默写期间已屏蔽原音与原文</span><textarea class="paper-textarea" style="min-height:76px;font-size:15px;">Consistency turns small daily practise into effortless fluency.</textarea></div>
+          <div class="page-foot"><span>空输入拦截</span><button class="btn-primary-paper write" style="height:34px;padding:0 16px;font-size:12.5px;">📩 提交默写</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S4 · 纸墨批改自检态（差异高亮 + OK 直通）</div>
+      <div class="book-window mini-book">
+        <div class="page-card">
+          <div class="page-card-head"><span class="stage-kicker">STAGE 4 · 自检对照</span><span style="font-size:11.5px;color:#1e8e3e;font-weight:600;">自检无误即下一句</span></div>
+          <div class="paper-diff-stack">
+            <div class="paper-diff-row"><label>我的输入</label><div class="txt" style="font-size:14.5px;"><span class="p-ok">Consistency turns small daily </span><span class="p-err">practise</span><span class="p-ok"> into effortless fluency.</span></div></div>
+            <div class="paper-diff-row" style="border-color:rgba(0,113,227,0.28);background:#f5f9ff;"><label style="color:var(--blue)">正确原文</label><div class="txt" style="font-size:14.5px;"><span class="p-ok">Consistency turns small daily </span><span class="p-fix">practice</span><span class="p-ok"> into effortless fluency.</span></div></div>
+          </div>
+          <div class="page-foot"><button class="btn-paper">🔄 重新输入</button><button class="btn-primary-paper ok" style="height:34px;padding:0 16px;font-size:12.5px;">✅ 确认 OK（下一句）</button></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+</script>
+</body>
+</html>

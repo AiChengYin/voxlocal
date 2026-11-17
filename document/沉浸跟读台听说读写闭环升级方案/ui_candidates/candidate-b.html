@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 B · Studio 播客与语音备忘录抽屉 (Apple Design)</title>
+<style>
+  :root {
+    --bg-base: #0b0b0d;
+    --surface-1: #16161a;
+    --surface-2: #1f1f24;
+    --surface-3: #2b2b32;
+    --border-subtle: rgba(255, 255, 255, 0.09);
+    --text-1: #f5f5f7;
+    --text-2: rgba(245, 245, 247, 0.66);
+    --text-3: rgba(245, 245, 247, 0.4);
+    --crimson: #ff375f;
+    --blue: #0a84ff;
+    --purple: #bf5af2;
+    --green: #30d158;
+    --amber: #ffd60a;
+    --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --spring-sheet: cubic-bezier(0.2, 1.15, 0.38, 1);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font);
+    background: var(--bg-base);
+    color: var(--text-1);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .studio-frame {
+    position: relative;
+    width: 880px;
+    max-width: 100%;
+    height: 600px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 32px 84px rgba(0, 0, 0, 0.65);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 顶部播客风纤细进度轨与导航 */
+  .studio-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: rgba(22, 22, 26, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
+    z-index: 2;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: background 140ms, transform 100ms ease-out;
+  }
+  .back-link:hover { background: rgba(10, 132, 255, 0.12); }
+  .back-link:active { transform: scale(0.96); }
+
+  .header-center {
+    text-align: center;
+  }
+  .header-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+
+  .top-settings-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mini-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    font-size: 11.5px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .mini-chip button {
+    width: 18px; height: 18px; border-radius: 50%; border: none;
+    background: var(--surface-3); color: var(--text-1); cursor: pointer; font-size: 12px;
+  }
+  .mini-chip button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* 主内容层（S3/S4 弹出 Sheet 时会向后退缩暗化） */
+  .studio-body {
+    flex: 1;
+    position: relative;
+    padding: 24px 28px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 380ms var(--spring), opacity 340ms ease, filter 340ms ease;
+    transform-origin: center top;
+  }
+  .studio-frame.sheet-open .studio-body {
+    transform: scale(0.955) translateY(-6px);
+    opacity: 0.35;
+    filter: blur(2px);
+    pointer-events: none;
+  }
+
+  /* 歌词聚焦主卡片 */
+  .lyric-card {
+    flex: 1;
+    border-radius: 20px;
+    background: radial-gradient(ellipse at 30% 20%, rgba(255, 55, 95, 0.11), transparent 55%),
+                radial-gradient(ellipse at 75% 85%, rgba(10, 132, 255, 0.10), transparent 55%),
+                var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .lyric-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .loop-pill {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-2);
+    background: rgba(255,255,255,0.06);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .btn-reveal-pill {
+    border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.07);
+    color: var(--text-1);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 100ms ease-out, background 150ms;
+  }
+  .btn-reveal-pill:active { transform: scale(0.96); }
+
+  .lyric-center {
+    margin: auto 0;
+    padding: 12px 0;
+  }
+  .blind-lyric {
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-1);
+    line-height: 1.4;
+  }
+  .blind-lyric span {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--text-2);
+    margin-top: 8px;
+  }
+  .revealed-lyric {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.024em;
+    line-height: 1.32;
+    color: #ffffff;
+  }
+
+  /* Apple Voice Memos 风格实时波形条 */
+  .voice-memos-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.36);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .waveform-strip {
+    flex: 1;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    overflow: hidden;
+  }
+  .w-bar {
+    flex: 1;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.16);
+    height: 6px;
+    transition: height 120ms ease, background 180ms ease;
+  }
+  .w-bar.live {
+    background: var(--crimson);
+    animation: wavePulse 0.7s ease-in-out infinite alternate;
+  }
+  .rec-counter-badge {
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-1);
+    background: var(--surface-3);
+    padding: 5px 10px;
+    border-radius: 8px;
+  }
+  .rec-counter-badge.done { background: rgba(48, 209, 88, 0.2); color: var(--green); }
+
+  /* 底部音频走带控制栏 */
+  .transport-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    gap: 16px;
+  }
+  .transport-left { display: flex; align-items: center; gap: 10px; }
+  .circle-btn {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-2);
+    color: var(--text-1);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 100ms ease-out, background 150ms;
+  }
+  .circle-btn:hover:not(:disabled) { background: var(--surface-3); }
+  .circle-btn:active:not(:disabled) { transform: scale(0.93); }
+  .circle-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* 录音主按键：Apple Voice Memos 经典双环红键 */
+  .rec-shutter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .rec-shutter {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    background: transparent;
+    padding: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 100ms ease-out;
+  }
+  .rec-shutter:active { transform: scale(0.92); }
+  .rec-shutter-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: var(--crimson);
+    transition: all 240ms var(--spring);
+  }
+  .rec-shutter.recording .rec-shutter-inner {
+    width: 20px; height: 20px; border-radius: 5px;
+  }
+  .btn-write-sheet {
+    height: 44px; padding: 0 24px; border-radius: 999px;
+    border: none; background: var(--purple); color: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(191, 90, 242, 0.38);
+    transition: transform 100ms ease-out;
+  }
+  .btn-write-sheet:active { transform: scale(0.96); }
+
+  .transport-right {
+    display: flex; align-items: center; gap: 10px;
+    min-width: 210px; justify-content: flex-end;
+  }
+  .replay-mine-btn {
+    padding: 8px 13px; border-radius: 999px;
+    border: 1px solid rgba(10, 132, 255, 0.35);
+    background: rgba(10, 132, 255, 0.14);
+    color: #64d2ff; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .gap-inline {
+    display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-2);
+  }
+  .gap-inline input { width: 64px; accent-color: var(--blue); }
+
+  /* ── Apple 锚定底部 Sheet（S3 默写 & S4 自检对照） ── */
+  .sheet-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 320ms ease;
+    z-index: 10;
+  }
+  .studio-frame.sheet-open .sheet-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .write-sheet {
+    position: absolute;
+    left: 16px; right: 16px; bottom: 16px;
+    background: #1c1c1e;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 22px;
+    padding: 18px 22px 20px;
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.65);
+    z-index: 11;
+    transform-origin: bottom center;
+    transform: translateY(110%) scale(0.97);
+    opacity: 0;
+    transition: transform 400ms var(--spring), opacity 260ms ease;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .studio-frame.sheet-open .write-sheet {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  .sheet-grabber {
+    width: 38px; height: 4px; border-radius: 2px;
+    background: rgba(255, 255, 255, 0.24);
+    margin: -4px auto 2px;
+  }
+  .sheet-head {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sheet-title { font-size: 16px; font-weight: 700; letter-spacing: -0.015em; }
+  .lock-tag {
+    font-size: 11.5px; font-weight: 600; color: #e0b3ff;
+    background: rgba(191, 90, 242, 0.16);
+    padding: 4px 10px; border-radius: 999px;
+  }
+  .sheet-textarea {
+    width: 100%; min-height: 115px;
+    background: #121214;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 14px; color: #fff; font-family: var(--font); font-size: 17px;
+    resize: none; outline: none;
+  }
+  .sheet-textarea:focus { border-color: var(--purple); }
+  .sheet-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .btn-secondary {
+    height: 40px; padding: 0 18px; border-radius: 999px;
+    background: var(--surface-3); border: none; color: var(--text-1); font-weight: 600; cursor: pointer;
+  }
+  .btn-submit {
+    height: 40px; padding: 0 22px; border-radius: 999px;
+    background: var(--purple); border: none; color: #fff; font-weight: 700; cursor: pointer;
+  }
+  .btn-submit:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-ok {
+    height: 40px; padding: 0 22px; border-radius: 999px;
+    background: var(--green); border: none; color: #052e12; font-weight: 700; cursor: pointer;
+  }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .compare-box {
+    background: #121214; border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 12px;
+  }
+  .compare-box h4 { font-size: 11px; color: var(--text-3); margin-bottom: 6px; letter-spacing: 0.04em; }
+  .compare-box p { font-size: 15.5px; line-height: 1.5; }
+  .d-ok { color: #30d158; }
+  .d-err { color: #ff453a; background: rgba(255,69,58,0.18); text-decoration: line-through; padding: 0 3px; border-radius: 4px; }
+  .d-fix { color: #ffd60a; background: rgba(255,214,10,0.16); font-weight: 700; padding: 0 3px; border-radius: 4px; }
+
+  .hidden { display: none !important; }
+  @keyframes wavePulse { from { height: 6px; } to { height: 24px; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Showcase Layout */
+  body.showcase { padding: 28px; align-items: flex-start; }
+  .showcase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; width: 1280px; }
+  .showcase-hero { grid-column: 1 / -1; }
+  .showcase-tag { font-size: 12px; font-weight: 600; color: var(--crimson); margin-bottom: 8px; }
+  .showcase .studio-frame { width: 100%; height: auto; }
+  .showcase .mini-frame { height: 340px; }
+</style>
+</head>
+<body>
+<div id="interactive-root">
+  <div class="studio-frame" id="frame">
+    <div class="studio-header">
+      <button class="back-link">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        文本库
+      </button>
+      <div class="header-center">
+        <div class="header-title">沉浸跟读台 · 听说读写闭环</div>
+        <div class="header-sub">第 2 / 5 句 · 第 1 轮 (40%) · 乱序无限循环</div>
+      </div>
+      <div class="top-settings-chips">
+        <div class="mini-chip">
+          <span>目标</span>
+          <button id="t-dec">−</button>
+          <strong id="t-val">3</strong>次
+          <button id="t-inc">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="studio-body">
+      <div class="lyric-card">
+        <div class="lyric-top">
+          <span class="loop-pill" id="b-loop">● 盲听循环 · 第 2 遍 · 0:02 / 0:05</span>
+          <button class="btn-reveal-pill" id="b-reveal">显示原文</button>
+        </div>
+
+        <div class="lyric-center">
+          <div class="blind-lyric" id="b-blind">
+            🎧 盲听中，请专注听音输入…
+            <span>先分辨语调与连读，再按下下方红色录音键大声跟读</span>
+          </div>
+          <div class="revealed-lyric hidden" id="b-orig">
+            Consistency turns small daily practice into effortless fluency.
+          </div>
+        </div>
+
+        <div class="voice-memos-bar">
+          <div class="waveform-strip" id="waveform"></div>
+          <div class="rec-counter-badge" id="b-rec-badge">开口 0 / 3</div>
+        </div>
+      </div>
+
+      <div class="transport-bar">
+        <div class="transport-left">
+          <button class="circle-btn" id="b-play" title="播放/暂停">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          </button>
+          <button class="circle-btn" id="b-replay" title="重播本句">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+
+        <div class="rec-shutter-wrap">
+          <button class="rec-shutter" id="b-shutter" title="开始/结束录音">
+            <div class="rec-shutter-inner"></div>
+          </button>
+          <span id="b-rec-hint" style="font-size:13px;font-weight:600;color:var(--text-2);">点击录制跟读 (0/3)</span>
+          <button class="btn-write-sheet hidden" id="b-open-write">✍️ 写 · 进入默写</button>
+        </div>
+
+        <div class="transport-right">
+          <button class="replay-mine-btn hidden" id="b-replay-mine">🔊 回放我的录音</button>
+          <div class="gap-inline">
+            <span>停顿</span>
+            <input type="range" id="b-gap" min="5" max="50" value="10">
+            <span id="b-gap-lbl">1.0s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 锚定式底部 Sheet：S3 & S4 -->
+    <div class="sheet-scrim"></div>
+    <div class="write-sheet" id="write-sheet">
+      <div class="sheet-grabber"></div>
+      <div class="sheet-head">
+        <div class="sheet-title" id="sheet-title">✍️ 默写输入（听音与原文已隔离）</div>
+        <span class="lock-tag" id="sheet-lock">🔒 防作弊锁生效中</span>
+      </div>
+
+      <div id="sheet-s3">
+        <textarea class="sheet-textarea" id="b-write-input" placeholder="凭刚才反复听读的印象默写当前句子…"></textarea>
+        <div class="sheet-actions" style="margin-top:12px;">
+          <button class="btn-submit" id="b-submit" disabled>📩 提交默写</button>
+        </div>
+      </div>
+
+      <div id="sheet-s4" class="hidden">
+        <div class="compare-grid">
+          <div class="compare-box">
+            <h4>我的输入</h4>
+            <p><span class="d-ok">Consistency turns small daily </span><span class="d-err">practise</span><span class="d-ok"> into effortless fluency.</span></p>
+          </div>
+          <div class="compare-box" style="border-color:rgba(10,132,255,0.38);">
+            <h4 style="color:#64d2ff;">正确原文</h4>
+            <p><span class="d-ok">Consistency turns small daily </span><span class="d-fix">practice</span><span class="d-ok"> into effortless fluency.</span></p>
+          </div>
+        </div>
+        <div class="sheet-actions" style="margin-top:14px;">
+          <button class="btn-secondary" id="b-retry">🔄 重新输入</button>
+          <button class="btn-ok" id="b-ok">✅ 确认 OK（下一句）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const wf = document.getElementById('waveform');
+if (wf) {
+  for (let i = 0; i < 42; i++) {
+    const b = document.createElement('div');
+    b.className = 'w-bar';
+    b.style.animationDelay = ((i % 7) * 0.08) + 's';
+    wf.appendChild(b);
+  }
+}
+
+const st = { stage: 'S1', rec: 0, target: 3, revealed: false, hasRec: false, sec: 0, timer: null };
+const $ = id => document.getElementById(id);
+
+function syncB() {
+  const s = st.stage;
+  $('frame').classList.toggle('sheet-open', s === 'S3' || s === 'S4');
+  $('sheet-s3').classList.toggle('hidden', s !== 'S3');
+  $('sheet-s4').classList.toggle('hidden', s !== 'S4');
+  $('sheet-title').textContent = s === 'S4' ? '🔍 默写自检对照' : '✍️ 默写输入（听音与原文已隔离）';
+
+  $('b-blind').classList.toggle('hidden', st.revealed);
+  $('b-orig').classList.toggle('hidden', !st.revealed);
+  $('b-reveal').textContent = st.revealed ? '🙈 隐藏原文' : '👁️ 显示原文';
+
+  $('b-shutter').classList.toggle('hidden', s === 'S2' || s === 'S3' || s === 'S4');
+  $('b-rec-hint').classList.toggle('hidden', s === 'S2' || s === 'S3' || s === 'S4');
+  $('b-shutter').classList.toggle('recording', s === 'RECORDING');
+  $('b-open-write').classList.toggle('hidden', s !== 'S2');
+
+  $('b-replay-mine').classList.toggle('hidden', !st.hasRec);
+  $('b-play').disabled = s === 'RECORDING';
+  $('b-replay').disabled = s === 'RECORDING';
+  $('t-dec').disabled = s === 'RECORDING' || st.target <= 3;
+  $('t-inc').disabled = s === 'RECORDING' || st.target >= 10;
+  $('t-val').textContent = st.target;
+
+  $('b-rec-badge').textContent = `开口 ${st.rec} / ${st.target}`;
+  $('b-rec-badge').classList.toggle('done', st.rec >= st.target);
+  if (s === 'RECORDING') {
+    $('b-rec-hint').textContent = `正在录音 · ${st.sec.toFixed(1)}s（点击方块结束）`;
+    $('b-rec-hint').style.color = '#ff375f';
+  } else {
+    $('b-rec-hint').textContent = `点击录制跟读 (${st.rec}/${st.target})`;
+    $('b-rec-hint').style.color = '';
+  }
+  document.querySelectorAll('.w-bar').forEach(el => el.classList.toggle('live', s === 'RECORDING'));
+}
+
+if (!new URLSearchParams(location.search).get('mode')) {
+  $('b-reveal').onclick = () => { st.revealed = !st.revealed; syncB(); };
+  $('b-shutter').onclick = () => {
+    if (st.stage === 'S1') {
+      st.stage = 'RECORDING'; st.sec = 0;
+      st.timer = setInterval(() => { st.sec += 0.1; syncB(); }, 100);
+    } else if (st.stage === 'RECORDING') {
+      clearInterval(st.timer); st.rec++; st.hasRec = true;
+      st.stage = st.rec >= st.target ? 'S2' : 'S1';
+    }
+    syncB();
+  };
+  $('b-open-write').onclick = () => { st.revealed = false; st.stage = 'S3'; $('b-write-input').value = ''; $('b-submit').disabled = true; syncB(); };
+  $('b-write-input').oninput = e => { $('b-submit').disabled = !e.target.value.trim(); };
+  $('b-submit').onclick = () => { st.stage = 'S4'; syncB(); };
+  $('b-retry').onclick = () => { st.revealed = false; st.stage = 'S3'; $('b-write-input').value = ''; $('b-submit').disabled = true; syncB(); };
+  $('b-ok').onclick = () => { st.stage = 'S1'; st.rec = 0; st.hasRec = false; st.revealed = false; syncB(); };
+  $('t-dec').onclick = () => { st.target = Math.max(3, st.target - 1); if (st.stage === 'S1' && st.rec >= st.target) st.stage = 'S2'; syncB(); };
+  $('t-inc').onclick = () => { st.target = Math.min(10, st.target + 1); if (st.rec < st.target) st.stage = 'S1'; syncB(); };
+  $('b-gap').oninput = e => { $('b-gap-lbl').textContent = (e.target.value / 10).toFixed(1) + 's'; };
+  syncB();
+} else {
+  document.body.classList.add('showcase');
+  const bars = Array.from({length: 40}, (_, i) => {
+    const h = i < 24 ? (8 + ((i * 7) % 18)) : 6;
+    return `<div class="w-bar ${i < 24 ? 'live' : ''}" style="height:${h}px"></div>`;
+  }).join('');
+  document.getElementById('interactive-root').innerHTML = `
+  <div class="showcase-grid">
+    <div class="showcase-hero">
+      <div class="showcase-tag">方案 B · Studio 暗夜播客与语音备忘录抽屉 — S1/RECORDING 主工作台</div>
+      <div class="studio-frame" style="height:430px;">
+        <div class="studio-header">
+          <button class="back-link">‹ 文本库</button>
+          <div class="header-center"><div class="header-title">沉浸跟读台 · 听说读写闭环</div><div class="header-sub">第 2 / 5 句 · 第 1 轮 (40%) · 乱序无限循环</div></div>
+          <div class="top-settings-chips"><div class="mini-chip">目标 <button disabled>−</button><strong>3</strong>次<button disabled>+</button></div></div>
+        </div>
+        <div class="studio-body">
+          <div class="lyric-card">
+            <div class="lyric-top"><span class="loop-pill">● 录音采集中 · 原音已自动暂停</span><button class="btn-reveal-pill">👁️ 显示原文</button></div>
+            <div class="lyric-center"><div class="blind-lyric">🎧 盲听跟读中 · 请清晰朗读本句<span>正在实时监测人声波形 (已录 2.1s / 有效门禁 ≥1.0s)</span></div></div>
+            <div class="voice-memos-bar"><div class="waveform-strip">${bars}</div><div class="rec-counter-badge">开口 1 / 3</div></div>
+          </div>
+          <div class="transport-bar">
+            <div class="transport-left"><button class="circle-btn" disabled>⏸</button><button class="circle-btn" disabled>↺</button></div>
+            <div class="rec-shutter-wrap"><button class="rec-shutter recording"><div class="rec-shutter-inner"></div></button><span style="font-size:13px;font-weight:600;color:#ff375f;">正在录音 · 2.1s (点击结束)</span></div>
+            <div class="transport-right"><button class="replay-mine-btn" disabled style="opacity:0.4">🔊 回放我的录音</button><div class="gap-inline">停顿 <input type="range" value="10" disabled> 1.0s</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S3 · 锚定式底部 Sheet（背景退缩暗化，防作弊隔离）</div>
+      <div class="studio-frame mini-frame sheet-open">
+        <div class="studio-header"><button class="back-link">‹ 文本库</button><div class="header-center"><div class="header-title">沉浸跟读台</div></div><div class="mini-chip">目标 <strong>3</strong> 次</div></div>
+        <div class="studio-body"><div class="lyric-card"><div class="lyric-center"><div class="blind-lyric">🎧 原文已强锁隐藏</div></div></div></div>
+        <div class="sheet-scrim"></div>
+        <div class="write-sheet">
+          <div class="sheet-grabber"></div>
+          <div class="sheet-head"><div class="sheet-title">✍️ 默写输入（听音与原文已隔离）</div><span class="lock-tag">🔒 防作弊锁生效中</span></div>
+          <textarea class="sheet-textarea" style="min-height:86px;">Consistency turns small daily practise into effortless fluency.</textarea>
+          <div class="sheet-actions"><button class="btn-submit">📩 提交默写</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S4 · Sheet 内双栏差异自检对照</div>
+      <div class="studio-frame mini-frame sheet-open">
+        <div class="studio-header"><button class="back-link">‹ 文本库</button><div class="header-center"><div class="header-title">沉浸跟读台</div></div><div class="mini-chip">目标 <strong>3</strong> 次</div></div>
+        <div class="studio-body"><div class="lyric-card"></div></div>
+        <div class="sheet-scrim"></div>
+        <div class="write-sheet">
+          <div class="sheet-grabber"></div>
+          <div class="sheet-head"><div class="sheet-title">🔍 默写自检对照</div><span class="lock-tag" style="color:#30d158;background:rgba(48,209,88,0.16)">可自判 OK 或重输</span></div>
+          <div class="compare-grid">
+            <div class="compare-box"><h4>我的输入</h4><p><span class="d-ok">Consistency turns small daily </span><span class="d-err">practise</span><span class="d-ok"> into effortless fluency.</span></p></div>
+            <div class="compare-box" style="border-color:rgba(10,132,255,0.4)"><h4 style="color:#64d2ff;">正确原文</h4><p><span class="d-ok">Consistency turns small daily </span><span class="d-fix">practice</span><span class="d-ok"> into effortless fluency.</span></p></div>
+          </div>
+          <div class="sheet-actions"><button class="btn-secondary">🔄 重新输入</button><button class="btn-ok">✅ 确认 OK（下一句）</button></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+</script>
+</body>
+</html>

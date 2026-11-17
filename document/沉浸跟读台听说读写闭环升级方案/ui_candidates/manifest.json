@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "project": "VoxLocal 沉浸跟读台「听说读写」闭环升级",
+  "brief": "基于 Apple Design 规范（Fluid Interfaces, Translucent Materials, Optical Typography, Principles of Great Design）重新设计 FocusReadPanel 交互与视觉体验",
+  "candidates": [
+    {
+      "id": "vision-glass",
+      "name": "方案 A：Vision 空间液态玻璃台",
+      "concept": "visionOS / macOS 空间毛玻璃悬浮层级，顶部 4 阶段胶囊指示，中央盲听微透光罩，底部稳定空间锚点形态变换主按钮。",
+      "palette": ["#06080f", "#181e2c", "#0a84ff", "#5ac8fa", "#bf5af2", "#30d158"],
+      "source": "candidate-a.html",
+      "image": "images/candidate-a.png"
+    },
+    {
+      "id": "studio-sheet",
+      "name": "方案 B：Studio 暗夜播客与语音备忘录抽屉",
+      "concept": "Apple Music 歌词聚焦排版 + Voice Memos 红色双环快门与实时波形 + 锚定式底部 Sheet 默写抽屉（背景退缩暗化实现防作弊隔离）。",
+      "palette": ["#0b0b0d", "#1f1f24", "#ff375f", "#0a84ff", "#bf5af2", "#30d158"],
+      "source": "candidate-b.html",
+      "image": "images/candidate-b.png"
+    },
+    {
+      "id": "books-paper",
+      "name": "方案 C：Books 温润纸墨专注学堂",
+      "concept": "Apple Books 护眼温润纸感（浅色极简学堂），New York 衬线阅读排版与柔和留白，适合长时间精听默写不刺眼。",
+      "palette": ["#f5f2eb", "#ffffff", "#1d1d1f", "#0071e3", "#8944ab", "#1e8e3e"],
+      "source": "candidate-c.html",
+      "image": "images/candidate-c.png"
+    },
+    {
+      "id": "pro-hud",
+      "name": "方案 D：Pro Audio 声学精密工作台",
+      "concept": "Logic Pro / macOS HUD 控制台风格，首创右侧「双阈值声学门禁遥测表」（实时可视化 ≥1.0s 与 RMS 阈值）与键盘快捷键提示，与现有左侧语音面板无缝同源。",
+      "palette": ["#090c12", "#131927", "#22d3ee", "#818cf8", "#fb7185", "#34d399"],
+      "source": "candidate-d.html",
+      "image": "images/candidate-d.png"
+    },
+    {
+      "id": "macos-notion-light",
+      "name": "方案 E：macOS × Notion 极简原生浅色工作台",
+      "concept": "纯正 macOS 浅色毛玻璃工具栏 + Notion 极简效率美学（中性白底、克制细线边框、Callout 盲听卡、Inline 属性徽标与原生系统色），专注无干扰。",
+      "palette": ["#f3f4f6", "#ffffff", "#111827", "#007aff", "#8944ab", "#248a3d"],
+      "source": "candidate-e.html",
+      "image": "images/candidate-e.png"
+    }
+  ]
+}

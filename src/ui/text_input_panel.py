@@ -1,11 +1,11 @@
 """
-文本输入面板
+文本输入面板（方案 E：macOS × Notion 极简原生风）
 """
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPlainTextEdit, QFrame
 )
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal
 
 
 class TextInputPanel(QWidget):
@@ -19,8 +19,8 @@ class TextInputPanel(QWidget):
         outer = QFrame()
         outer.setObjectName("card")
         outer_layout = QVBoxLayout(outer)
-        outer_layout.setContentsMargins(14, 12, 14, 12)
-        outer_layout.setSpacing(8)
+        outer_layout.setContentsMargins(16, 14, 16, 14)
+        outer_layout.setSpacing(10)
 
         # 标题行
         title_row = QHBoxLayout()
@@ -28,16 +28,16 @@ class TextInputPanel(QWidget):
         section_lbl.setObjectName("section_title")
         title_row.addWidget(section_lbl)
         title_row.addStretch()
-        self.char_count = QLabel("0 字符")
-        self.char_count.setObjectName("char_count")
+        self.char_count = QLabel("0 行有效句子 | 0 字符")
+        self.char_count.setObjectName("prop_chip")
         title_row.addWidget(self.char_count)
         outer_layout.addLayout(title_row)
 
         # 文本编辑区
         self.editor = QPlainTextEdit()
         self.editor.setPlaceholderText(
-            "在此粘贴或输入英文文本（以换行作为每句分界）…\n\n"
-            "系统将每次朗读一行并无限次循环，支持随时切换下一行。\n\n"
+            "在此粘贴或输入英文文本（支持以换行或标点分句）…\n\n"
+            "进入跟读台后将按乱序无限循环朗读，完成开口录音与默写自检后自动切入下一句。\n\n"
             "例如：\n"
             "The quick brown fox jumps over the lazy dog.\n"
             "Practice makes perfect.\n"
@@ -56,7 +56,7 @@ class TextInputPanel(QWidget):
         if lang == "ja":
             self.editor.setPlaceholderText(
                 "在此粘贴或输入日文文本（支持以换行或句号「。」分句）…\n\n"
-                "系统将每次朗读一句并无限次循环，支持随时切换下一行跟读。\n\n"
+                "进入跟读台后将按乱序无限循环朗读，完成开口录音与默写自检后自动切入下一句。\n\n"
                 "例如：\n"
                 "吾輩は猫である。名前はまだ無い。\n"
                 "どこで生れたかとんと見当がつかぬ。\n"
@@ -65,7 +65,7 @@ class TextInputPanel(QWidget):
         else:
             self.editor.setPlaceholderText(
                 "在此粘贴或输入英文文本（支持以换行或标点分句）…\n\n"
-                "系统将每次朗读一行并无限次循环，支持随时切换下一行。\n\n"
+                "进入跟读台后将按乱序无限循环朗读，完成开口录音与默写自检后自动切入下一句。\n\n"
                 "例如：\n"
                 "The quick brown fox jumps over the lazy dog.\n"
                 "Practice makes perfect.\n"

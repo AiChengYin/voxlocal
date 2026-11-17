@@ -361,6 +361,63 @@ def test_main_window_integration_and_persistence():
     print("  [PASS] MainWindow 集成、DB 持久化与乱序直通下一句测试通过")
 
 
+def test_theme_switching_and_persistence():
+    print("=== 5. 测试方案 E 浅色默认、深浅色无缝切换与持久化 ===")
+    w = MainWindow()
+    orig_saved_theme = w._db.get_setting("ui_theme", "light")
+    try:
+        # 测试前先归位为 light，验证默认与切换流转
+        w.set_theme("light")
+        assert w.current_theme == "light"
+        assert w.btn_theme_light.objectName() == "theme_btn_active"
+        assert w.btn_theme_dark.objectName() == "theme_btn_inactive"
+        assert "#f5f5f7" in QApplication.instance().styleSheet()
+
+        # 通过按钮切换到深色模式并验证实时联动与持久化
+        w.btn_theme_dark.click()
+        assert w.current_theme == "dark"
+        assert w._db.get_setting("ui_theme") == "dark"
+        assert w.btn_theme_dark.objectName() == "theme_btn_active"
+        assert w.btn_theme_light.objectName() == "theme_btn_inactive"
+        assert "#121316" in QApplication.instance().styleSheet()
+        assert w.focus_read_panel._theme == "dark"
+        assert w.voice_panel._theme == "dark"
+
+        # 处于 S4 对照态时切换主题，diff HTML 同步切换配色
+        panel = w.focus_read_panel
+        panel.set_target_read_count(3, emit_signal=False)
+        panel.set_line_content("Practice makes perfect!", 1, 2, 1)
+        for _ in range(3):
+            panel.increment_recording_count()
+        panel.enter_writing_stage()
+        panel.write_input.setPlainText("Practice makes perfcx!")
+        panel.submit_writing()
+        assert "#ff6961" in panel.review_user_lbl.text()
+
+        w.btn_theme_light.click()
+        assert w.current_theme == "light"
+        assert "#cf222e" in panel.review_user_lbl.text()
+
+        # 验证 Stepper +/- 按钮与 target_spin 联动
+        before_val = panel.target_spin.value()
+        panel._btn_target_inc.click()
+        assert panel.target_spin.value() == before_val + 1
+        panel._btn_target_dec.click()
+        assert panel.target_spin.value() == before_val
+
+        # 重启新窗口自动恢复持久化主题
+        w.btn_theme_dark.click()
+        w.close()
+        w2 = MainWindow()
+        assert w2.current_theme == "dark"
+        w2.close()
+    finally:
+        w_restore = MainWindow()
+        w_restore.set_theme(orig_saved_theme)
+        w_restore.close()
+    print("  [PASS] 浅色/深色无缝切换、S4 对照实时换肤、Stepper 联动与 DB 持久化通过")
+
+
 if __name__ == "__main__":
     app = QApplication([])
     # 防止离屏测试中弹窗阻塞
@@ -369,6 +426,7 @@ if __name__ == "__main__":
         test_audio_validation_and_recorder()
         test_focus_panel_state_machine()
         test_main_window_integration_and_persistence()
+        test_theme_switching_and_persistence()
     app.quit()
     print("\n>>> ALL ACCEPTANCE TESTS PASSED SUCCESSFULLY! <<<")
     sys.exit(0)

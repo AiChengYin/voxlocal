@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方案 D · Pro Audio 声学精密工作台 (Apple Design)</title>
+<style>
+  :root {
+    --bg-canvas: #090c12;
+    --panel-bg: #111622;
+    --panel-inner: #171e2e;
+    --hairline: rgba(148, 163, 184, 0.14);
+    --hairline-top: rgba(255, 255, 255, 0.14);
+    --text-1: #f8fafc;
+    --text-2: #94a3b8;
+    --text-3: #64748b;
+    --cyan: #22d3ee;
+    --indigo: #818cf8;
+    --green: #34d399;
+    --red: #fb7185;
+    --amber: #fbbf24;
+    --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-canvas);
+    color: var(--text-1);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .pro-console {
+    width: 900px;
+    max-width: 100%;
+    background: linear-gradient(180deg, #131927 0%, #0e131e 100%);
+    border: 1px solid var(--hairline);
+    border-top-color: var(--hairline-top);
+    border-radius: 18px;
+    box-shadow: 0 28px 72px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 顶部 macOS HUD Toolbar */
+  .pro-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(10, 14, 23, 0.78);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--hairline);
+    gap: 12px;
+  }
+  .tb-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--hairline);
+    color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 120ms ease;
+  }
+  .tb-btn:hover:not(:disabled) { color: var(--text-1); background: rgba(255, 255, 255, 0.09); }
+  .tb-btn:active:not(:disabled) { transform: scale(0.96); }
+  .tb-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .phase-rail {
+    display: flex; align-items: center;
+    background: #0a0d14;
+    border: 1px solid var(--hairline);
+    border-radius: 9px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .phase-node {
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 11.5px; font-weight: 600; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    transition: all 240ms var(--spring);
+  }
+  .phase-node.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.32), rgba(6, 182, 212, 0.25));
+    color: var(--cyan);
+    border: 1px solid rgba(34, 211, 238, 0.35);
+  }
+  .phase-node.done { color: var(--green); }
+
+  .telemetry-badge {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--cyan);
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.26);
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 中央主舞台 + 右侧微型声学门禁表 */
+  .pro-main {
+    display: grid;
+    grid-template-columns: 1fr 224px;
+    gap: 14px;
+    padding: 16px 18px;
+  }
+
+  .stage-pane {
+    background: var(--panel-inner);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 18px 20px;
+    min-height: 270px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .stage-head {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: var(--text-2);
+  }
+  .blind-box {
+    margin: auto 0;
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(10, 14, 23, 0.55);
+    border: 1px dashed rgba(34, 211, 238, 0.28);
+  }
+  .blind-box h3 { font-size: 17px; font-weight: 600; color: var(--text-1); margin-bottom: 6px; }
+  .blind-box p { font-size: 12.5px; color: var(--text-2); }
+  .orig-text {
+    margin: auto 0;
+    font-size: 24px; font-weight: 600; line-height: 1.4; letter-spacing: -0.02em; color: #fff;
+  }
+
+  /* 默写与对照 */
+  .pro-write { display: flex; flex-direction: column; gap: 10px; margin: auto 0; }
+  .pro-textarea {
+    width: 100%; min-height: 105px;
+    background: #0a0e16; border: 1px solid rgba(129, 140, 248, 0.45);
+    border-radius: 10px; padding: 12px; color: #fff; font-size: 16px; outline: none; resize: none;
+  }
+  .pro-textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.18); }
+  .pro-diff-grid { display: flex; flex-direction: column; gap: 8px; margin: auto 0; }
+  .pro-diff-box {
+    background: #0b0f18; border: 1px solid var(--hairline); border-radius: 10px; padding: 10px 12px;
+  }
+  .pro-diff-box span.lbl { display: block; font-size: 10.5px; font-weight: 700; color: var(--text-3); margin-bottom: 3px; }
+  .d-ok { color: #34d399; }
+  .d-err { color: #fb7185; background: rgba(251,113,133,0.16); text-decoration: line-through; padding: 0 3px; border-radius: 3px; }
+  .d-fix { color: #fbbf24; background: rgba(251,191,36,0.15); font-weight: 700; padding: 0 3px; border-radius: 3px; }
+
+  /* 右侧声学双阈值遥测柱 (HUD Inspector) */
+  .hud-side {
+    background: var(--panel-inner);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .hud-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--text-3); text-transform: uppercase;
+  }
+  .meter-block { display: flex; flex-direction: column; gap: 5px; }
+  .meter-row { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-2); font-family: var(--font-mono); }
+  .meter-track {
+    height: 7px; border-radius: 4px; background: #0a0d14; overflow: hidden; position: relative;
+  }
+  .meter-fill { height: 100%; border-radius: 4px; transition: width 120ms ease; }
+  .meter-thresh {
+    position: absolute; top: 0; bottom: 0; width: 2px; background: #fbbf24;
+  }
+  .rec-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .slot {
+    height: 22px; border-radius: 5px; background: #0a0d14; border: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
+  }
+  .slot.done { background: rgba(52, 211, 153, 0.16); border-color: var(--green); color: var(--green); font-weight: 700; }
+
+  /* 底部主控 + 参数检视条 */
+  .pro-dock {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(10, 14, 23, 0.72);
+    border-top: 1px solid var(--hairline);
+    gap: 12px;
+  }
+  .btn-pro {
+    height: 38px; padding: 0 18px; border-radius: 9px; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer; color: #fff;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: transform 100ms ease-out;
+  }
+  .btn-pro:active:not(:disabled) { transform: scale(0.97); }
+  .btn-pro:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pro-rec { background: linear-gradient(135deg, #06b6d4, #6366f1); }
+  .pro-stop { background: #e11d48; }
+  .pro-write-btn { background: #7c3aed; }
+  .pro-ok-btn { background: #10b981; color: #022c22; }
+
+  .inspector-group { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-2); }
+  .insp-box {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #0a0d14; border: 1px solid var(--hairline); border-radius: 8px; padding: 4px 9px;
+    font-variant-numeric: tabular-nums;
+  }
+  .insp-box button {
+    width: 20px; height: 20px; border-radius: 5px; border: none;
+    background: rgba(255,255,255,0.08); color: #fff; cursor: pointer;
+  }
+  .insp-box button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Showcase */
+  body.showcase { padding: 28px; align-items: flex-start; }
+  .showcase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; width: 1280px; }
+  .showcase-hero { grid-column: 1 / -1; }
+  .showcase-tag { font-size: 12px; font-weight: 700; color: var(--cyan); margin-bottom: 8px; }
+  .showcase .pro-console { width: 100%; }
+  .showcase .mini-pro .pro-main { grid-template-columns: 1fr; padding: 14px 16px; }
+  .showcase .mini-pro .stage-pane { min-height: 200px; padding: 14px 16px; }
+</style>
+</head>
+<body>
+<div id="interactive-root">
+  <div class="pro-console">
+    <div class="pro-toolbar">
+      <button class="tb-btn">‹ 返回文本库</button>
+      <div class="phase-rail">
+        <div class="phase-node active" data-p="0">01 盲听</div>
+        <div class="phase-node" data-p="1">02 录音 <span id="d-rc">0/3</span></div>
+        <div class="phase-node" data-p="2">03 默写</div>
+        <div class="phase-node" data-p="3">04 自检</div>
+      </div>
+      <div class="telemetry-badge">ROUND 1 · 02/05 (40%)</div>
+    </div>
+
+    <div class="pro-main">
+      <div class="stage-pane">
+        <div class="stage-head">
+          <span style="font-size:12px;color:var(--cyan);font-weight:600;font-family:var(--font-mono);" id="d-loop">● LOOP #2 · 0:02 / 0:05</span>
+          <button class="tb-btn" id="d-reveal">显示原文 <span class="kbd">V</span></button>
+        </div>
+
+        <div id="d-listen">
+          <div class="blind-box" id="d-blind">
+            <h3>🎧 盲听模式激活 · 原文已遮罩</h3>
+            <p>支持随时按 <span class="kbd">V</span> 核对原文；完成右侧设定录音次数后自动解锁默写环节</p>
+          </div>
+          <div class="orig-text hidden" id="d-orig">Consistency turns small daily practice into effortless fluency.</div>
+        </div>
+
+        <div id="d-write" class="pro-write hidden">
+          <div style="font-size:12px;color:var(--indigo);font-weight:600;">🔒 防作弊锁：已强制隐藏原文并禁用所有音频播放</div>
+          <textarea class="pro-textarea" id="d-input" placeholder="输入默写内容…"></textarea>
+        </div>
+
+        <div id="d-review" class="pro-diff-grid hidden">
+          <div class="pro-diff-box"><span class="lbl">MY INPUT</span><div><span class="d-ok">Consistency turns small daily </span><span class="d-err">practise</span><span class="d-ok"> into effortless fluency.</span></div></div>
+          <div class="pro-diff-box" style="border-color:rgba(34,211,238,0.35)"><span class="lbl" style="color:var(--cyan)">REFERENCE</span><div><span class="d-ok">Consistency turns small daily </span><span class="d-fix">practice</span><span class="d-ok"> into effortless fluency.</span></div></div>
+        </div>
+
+        <div style="font-size:12px;color:var(--text-2);" id="d-msg">准备就绪 · 点击【开始录音】进行第 1 次有效朗读检验</div>
+      </div>
+
+      <!-- 右侧声学双阈值 HUD -->
+      <div class="hud-side">
+        <div class="hud-title">声学双阈值门禁</div>
+        <div class="meter-block">
+          <div class="meter-row"><span>时长 ≥ 1.0s</span><span id="d-dur">0.0s</span></div>
+          <div class="meter-track"><div class="meter-fill" id="d-dur-bar" style="width:0%;background:var(--cyan)"></div><div class="meter-thresh" style="left:50%"></div></div>
+        </div>
+        <div class="meter-block">
+          <div class="meter-row"><span>RMS ≥ 0.008</span><span id="d-rms">0.000</span></div>
+          <div class="meter-track"><div class="meter-fill" id="d-rms-bar" style="width:0%;background:var(--green)"></div><div class="meter-thresh" style="left:30%"></div></div>
+        </div>
+        <div>
+          <div class="hud-title" style="margin-bottom:6px;">朗读完成槽位</div>
+          <div class="rec-slots" id="d-slots"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pro-dock">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="tb-btn" id="d-play">⏸ 暂停 <span class="kbd">Space</span></button>
+        <button class="tb-btn" id="d-replay">↺ 重播</button>
+        <button class="tb-btn hidden" id="d-replay-rec">🔊 回放录音</button>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="tb-btn hidden" id="d-retry">重新输入</button>
+        <button class="btn-pro pro-rec" id="d-main">🎙️ 开始录音 (0/3) <span class="kbd">R</span></button>
+      </div>
+
+      <div class="inspector-group">
+        <div class="insp-box">
+          <span>停顿</span>
+          <input type="range" id="d-gap" min="5" max="50" value="10" style="width:66px;accent-color:var(--cyan);">
+          <span id="d-gap-v" style="color:var(--cyan)">1.0s</span>
+        </div>
+        <div class="insp-box">
+          <span>目标</span>
+          <button id="d-dec">−</button><span id="d-tv">3</span><button id="d-inc">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ds = { stage:'S1', rec:0, target:3, rev:false, hasRec:false, sec:0, timer:null };
+const $ = id => document.getElementById(id);
+
+function syncD() {
+  const s = ds.stage;
+  $('d-listen').classList.toggle('hidden', s === 'S3' || s === 'S4');
+  $('d-write').classList.toggle('hidden', s !== 'S3');
+  $('d-review').classList.toggle('hidden', s !== 'S4');
+  $('d-blind').classList.toggle('hidden', ds.rev);
+  $('d-orig').classList.toggle('hidden', !ds.rev);
+  $('d-reveal').innerHTML = (ds.rev ? '隐藏原文' : '显示原文') + ' <span class="kbd">V</span>';
+  $('d-reveal').disabled = s === 'S3' || s === 'S4';
+
+  const canAudio = s === 'S1' || s === 'S2';
+  $('d-play').disabled = !canAudio;
+  $('d-replay').disabled = !canAudio;
+  $('d-replay-rec').classList.toggle('hidden', !ds.hasRec);
+  $('d-replay-rec').disabled = !canAudio;
+  $('d-dec').disabled = s === 'RECORDING' || ds.target <= 3;
+  $('d-inc').disabled = s === 'RECORDING' || ds.target >= 10;
+  $('d-tv').textContent = ds.target;
+  $('d-rc').textContent = `${ds.rec}/${ds.target}`;
+
+  const mapIdx = { S1:0, RECORDING:1, S2:1, S3:2, S4:3 };
+  document.querySelectorAll('.phase-node').forEach((n, i) => {
+    n.classList.toggle('active', i === mapIdx[s]);
+    n.classList.toggle('done', i < mapIdx[s]);
+  });
+
+  const slots = $('d-slots'); slots.innerHTML = '';
+  for (let i = 0; i < ds.target; i++) {
+    const el = document.createElement('div');
+    el.className = 'slot' + (i < ds.rec ? ' done' : '');
+    el.textContent = i < ds.rec ? '✓' : (i + 1);
+    slots.appendChild(el);
+  }
+
+  $('d-retry').classList.toggle('hidden', s !== 'S4');
+  const m = $('d-main');
+  m.disabled = false;
+  m.className = 'btn-pro';
+  if (s === 'S1') { m.classList.add('pro-rec'); m.innerHTML = `🎙️ 开始录音 (${ds.rec}/${ds.target}) <span class="kbd">R</span>`; }
+  else if (s === 'RECORDING') { m.classList.add('pro-stop'); m.textContent = `⏹ 结束录音 (${ds.rec}/${ds.target} · ${ds.sec.toFixed(1)}s)`; }
+  else if (s === 'S2') { m.classList.add('pro-write-btn'); m.textContent = '✍️ 写 · 进入默写'; }
+  else if (s === 'S3') { m.classList.add('pro-write-btn'); m.textContent = '📩 提交默写'; m.disabled = !$('d-input').value.trim(); }
+  else if (s === 'S4') { m.classList.add('pro-ok-btn'); m.textContent = '✅ 确认 OK（下一句）'; }
+}
+
+if (!new URLSearchParams(location.search).get('mode')) {
+  $('d-reveal').onclick = () => { ds.rev = !ds.rev; syncD(); };
+  $('d-input').oninput = () => syncD();
+  $('d-main').onclick = () => {
+    if (ds.stage === 'S1') {
+      ds.stage = 'RECORDING'; ds.sec = 0;
+      $('d-msg').textContent = '采集人声中… 请确保时长 ≥ 1.0s 且 RMS ≥ 0.008';
+      ds.timer = setInterval(() => {
+        ds.sec += 0.1;
+        $('d-dur').textContent = ds.sec.toFixed(1) + 's';
+        $('d-dur-bar').style.width = Math.min(100, ds.sec * 50) + '%';
+        $('d-rms').textContent = (0.012 + Math.random()*0.015).toFixed(3);
+        $('d-rms-bar').style.width = (45 + Math.random()*35) + '%';
+        syncD();
+      }, 100);
+    } else if (ds.stage === 'RECORDING') {
+      clearInterval(ds.timer); ds.rec++; ds.hasRec = true;
+      ds.stage = ds.rec >= ds.target ? 'S2' : 'S1';
+      $('d-msg').textContent = ds.stage === 'S2' ? '录音次数达标，可点击【写】进入默写' : `最新录音已校验保存 (${ds.rec}/${ds.target})`;
+    } else if (ds.stage === 'S2') {
+      ds.rev = false; ds.stage = 'S3'; $('d-input').value = '';
+      $('d-msg').textContent = '防作弊默写：已屏蔽音频与原文';
+    } else if (ds.stage === 'S3') {
+      ds.stage = 'S4'; $('d-msg').textContent = '差异高亮已生成，自检通过点击【确认 OK】';
+    } else if (ds.stage === 'S4') {
+      ds.stage = 'S1'; ds.rec = 0; ds.hasRec = false; ds.rev = false;
+      $('d-dur').textContent = '0.0s'; $('d-dur-bar').style.width = '0%';
+      $('d-rms').textContent = '0.000'; $('d-rms-bar').style.width = '0%';
+      $('d-msg').textContent = '已随机切换至下一句';
+    }
+    syncD();
+  };
+  $('d-retry').onclick = () => { ds.rev = false; ds.stage = 'S3'; $('d-input').value = ''; syncD(); };
+  $('d-dec').onclick = () => { ds.target = Math.max(3, ds.target - 1); if (ds.stage === 'S1' && ds.rec >= ds.target) ds.stage = 'S2'; syncD(); };
+  $('d-inc').onclick = () => { ds.target = Math.min(10, ds.target + 1); if (ds.rec < ds.target) ds.stage = 'S1'; syncD(); };
+  $('d-gap').oninput = e => { $('d-gap-v').textContent = (e.target.value / 10).toFixed(1) + 's'; };
+  syncD();
+} else {
+  document.body.classList.add('showcase');
+  document.getElementById('interactive-root').innerHTML = `
+  <div class="showcase-grid">
+    <div class="showcase-hero">
+      <div class="showcase-tag">方案 D · Pro Audio 声学精密工作台 — S1/RECORDING 双阈值遥测 HUD</div>
+      <div class="pro-console">
+        <div class="pro-toolbar">
+          <button class="tb-btn">‹ 返回文本库</button>
+          <div class="phase-rail"><div class="phase-node done">01 盲听</div><div class="phase-node active">02 录音 2/3</div><div class="phase-node">03 默写</div><div class="phase-node">04 自检</div></div>
+          <div class="telemetry-badge">ROUND 1 · 02/05 (40%)</div>
+        </div>
+        <div class="pro-main">
+          <div class="stage-pane">
+            <div class="stage-head"><span style="font-size:12px;color:#fb7185;font-weight:600;font-family:var(--font-mono);">● RECORDING · 原音自动暂停</span><button class="tb-btn">显示原文 <span class="kbd">V</span></button></div>
+            <div class="blind-box" style="border-color:rgba(251,113,133,0.45)"><h3>🎙️ 正在采集麦克风人声… 已录 1.6s</h3><p>实时显示右侧双阈值校验指标（≥ 1.0s 且 RMS ≥ 0.008），避免无效静音重试</p></div>
+            <div style="font-size:12px;color:#34d399;">✓ 时长与人声响度已达标，点击【结束录音】即可记为第 3/3 次</div>
+          </div>
+          <div class="hud-side">
+            <div class="hud-title">声学双阈值门禁</div>
+            <div class="meter-block"><div class="meter-row"><span>时长 ≥ 1.0s</span><span style="color:#34d399">1.6s ✓</span></div><div class="meter-track"><div class="meter-fill" style="width:80%;background:var(--cyan)"></div><div class="meter-thresh" style="left:50%"></div></div></div>
+            <div class="meter-block"><div class="meter-row"><span>RMS ≥ 0.008</span><span style="color:#34d399">0.024 ✓</span></div><div class="meter-track"><div class="meter-fill" style="width:72%;background:var(--green)"></div><div class="meter-thresh" style="left:30%"></div></div></div>
+            <div><div class="hud-title" style="margin-bottom:6px;">朗读完成槽位</div><div class="rec-slots"><div class="slot done">✓</div><div class="slot done">✓</div><div class="slot">3</div></div></div>
+          </div>
+        </div>
+        <div class="pro-dock">
+          <div style="display:flex;gap:8px;"><button class="tb-btn" disabled>⏸ 暂停</button><button class="tb-btn" disabled>↺ 重播</button><button class="tb-btn" disabled>🔊 回放录音</button></div>
+          <button class="btn-pro pro-stop">⏹ 结束录音 (2/3 · 1.6s)</button>
+          <div class="inspector-group"><div class="insp-box">停顿 <input type="range" value="10" disabled style="width:60px"> 1.0s</div><div class="insp-box">目标 <button disabled>−</button><span>3</span><button disabled>+</button></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S3 · 防作弊默写输入态</div>
+      <div class="pro-console mini-pro">
+        <div class="pro-main"><div class="stage-pane">
+          <div class="stage-head"><span style="font-size:12px;color:var(--indigo);font-family:var(--font-mono);">STAGE 03 · WRITE LOCKED</span><button class="tb-btn" disabled>原文已锁</button></div>
+          <div class="pro-write"><div style="font-size:12px;color:var(--indigo);">🔒 听音与看文全部禁用</div><textarea class="pro-textarea" style="min-height:80px;font-size:14.5px;">Consistency turns small daily practise into effortless fluency.</textarea></div>
+          <div style="display:flex;justify-content:flex-end;"><button class="btn-pro pro-write-btn" style="height:34px;font-size:12.5px;">📩 提交默写</button></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="showcase-tag">S4 · 自检对照与 OK 直通</div>
+      <div class="pro-console mini-pro">
+        <div class="pro-main"><div class="stage-pane">
+          <div class="stage-head"><span style="font-size:12px;color:var(--green);font-family:var(--font-mono);">STAGE 04 · DIFF REVIEW</span><span style="font-size:11px;color:var(--text-3);">SequenceMatcher</span></div>
+          <div class="pro-diff-grid">
+            <div class="pro-diff-box"><span class="lbl">MY INPUT</span><div style="font-size:14px;"><span class="d-ok">Consistency turns small daily </span><span class="d-err">practise</span><span class="d-ok"> into effortless fluency.</span></div></div>
+            <div class="pro-diff-box" style="border-color:rgba(34,211,238,0.35)"><span class="lbl" style="color:var(--cyan)">REFERENCE</span><div style="font-size:14px;"><span class="d-ok">Consistency turns small daily </span><span class="d-fix">practice</span><span class="d-ok"> into effortless fluency.</span></div></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;"><button class="tb-btn">🔄 重新输入</button><button class="btn-pro pro-ok-btn" style="height:34px;font-size:12.5px;">✅ 确认 OK（下一句）</button></div>
+        </div></div>
+      </div>
+    </div>
+  </div>`;
+}
+</script>
+</body>
+</html>

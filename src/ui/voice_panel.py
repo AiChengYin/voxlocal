@@ -1,32 +1,40 @@
 """
-语音调谐中心（方案 C：现代声波流光工作台）
-基于 oil-ui 规范重新设计：动态声波、流光分段控制器、芯片档位与神经规格注脚
+语音调谐中心（方案 E：macOS × Notion 极简原生风，支持浅色/深色主题无缝切换）
 """
 import random
-from typing import List, Optional
+from typing import List
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QComboBox, QSlider, QFrame, QPushButton, QSizePolicy
+    QComboBox, QSlider, QFrame, QPushButton
 )
 from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QPainter, QColor
 
 from src.engines.models import VoiceInfo
+from src.ui.theme import DEFAULT_THEME, get_tokens, normalize_theme
 
 
 class SoundWaveVisualizer(QWidget):
-    """5 频段动态跳动声波频谱微组件"""
+    """5 频段动态声波频谱微组件（随主题自动切换色板）"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(26, 16)
         self._heights = [5, 12, 8, 15, 6]
         self._targets = [12, 6, 14, 8, 13]
+        self._color_primary = QColor(get_tokens(DEFAULT_THEME)["wave_1"])
+        self._color_secondary = QColor(get_tokens(DEFAULT_THEME)["wave_2"])
         self._timer = QTimer(self)
-        self._timer.setInterval(90)
+        self._timer.setInterval(110)
         self._timer.timeout.connect(self._animate_step)
         self._timer.start()
+
+    def set_theme(self, mode: str):
+        tokens = get_tokens(mode)
+        self._color_primary = QColor(tokens["wave_1"])
+        self._color_secondary = QColor(tokens["wave_2"])
+        self.update()
 
     def _animate_step(self):
         for i in range(5):
@@ -45,15 +53,14 @@ class SoundWaveVisualizer(QWidget):
         for i, h in enumerate(self._heights):
             x = i * (bar_w + gap)
             y = 16 - h
-            # 错落采用电感紫与电光青
-            color = QColor("#6366f1") if i % 2 == 1 else QColor("#06b6d4")
+            color = self._color_primary if i % 2 == 0 else self._color_secondary
             painter.setBrush(color)
             painter.setPen(Qt.NoPen)
             painter.drawRoundedRect(x, y, bar_w, h, 1, 1)
 
 
 class VoiceParamPanel(QWidget):
-    """现代声波流光语音控制面板 (Cyber Fluent Studio)"""
+    """极简原生语音调谐面板（macOS × Notion，支持 Light / Dark 无缝切换）"""
 
     voice_changed = Signal(str)
     speed_changed = Signal(float)
@@ -65,16 +72,17 @@ class VoiceParamPanel(QWidget):
         self._current_lang: str = "en"
         self._preferred_voice_en: str = "en-US-AriaNeural"
         self._preferred_voice_ja: str = "ja-JP-NanamiNeural"
+        self._theme: str = DEFAULT_THEME
         self._setup_ui()
 
     def _setup_ui(self):
         outer = QFrame()
-        outer.setObjectName("cyber_panel")
+        outer.setObjectName("notion_panel")
         outer_layout = QVBoxLayout(outer)
-        outer_layout.setContentsMargins(14, 14, 14, 14)
+        outer_layout.setContentsMargins(16, 16, 16, 16)
         outer_layout.setSpacing(14)
 
-        # ── 1. 顶部声波频谱头 ──
+        # ── 1. 顶部标题与状态胶囊 ──
         header_row = QHBoxLayout()
         header_row.setSpacing(8)
 
@@ -82,49 +90,51 @@ class VoiceParamPanel(QWidget):
         header_row.addWidget(self.wave_widget)
 
         panel_title = QLabel("语音调谐中心")
-        panel_title.setObjectName("cyber_title")
+        panel_title.setObjectName("panel_title")
         header_row.addWidget(panel_title)
 
         header_row.addStretch()
 
-        cloud_badge = QLabel("NEURAL CLOUD")
-        cloud_badge.setObjectName("cyber_cloud_badge")
+        cloud_badge = QLabel("NEURAL")
+        cloud_badge.setObjectName("cloud_pill")
         header_row.addWidget(cloud_badge)
 
         outer_layout.addLayout(header_row)
 
-        # ── 2. 语种通道切换 ──
+        # ── 2. 语种通道分段控制器 ──
         lang_sec_row = QHBoxLayout()
         lang_lbl = QLabel("语种通道")
-        lang_lbl.setObjectName("cyber_section_title")
+        lang_lbl.setObjectName("section_title")
         lang_sec_row.addWidget(lang_lbl)
         lang_sec_row.addStretch()
-        lang_active_lbl = QLabel("ACTIVE")
-        lang_active_lbl.setStyleSheet("color: #64748b; font-size: 10px; font-weight: 700;")
-        lang_sec_row.addWidget(lang_active_lbl)
+        self._lang_active_lbl = QLabel("ACTIVE")
+        lang_sec_row.addWidget(self._lang_active_lbl)
         outer_layout.addLayout(lang_sec_row)
 
-        segment_row = QHBoxLayout()
-        segment_row.setSpacing(6)
+        seg_box = QFrame()
+        seg_box.setObjectName("segment_box")
+        segment_row = QHBoxLayout(seg_box)
+        segment_row.setContentsMargins(3, 3, 3, 3)
+        segment_row.setSpacing(4)
 
-        self.btn_lang_en = QPushButton("🇬🇧 英语 (EN)")
-        self.btn_lang_en.setObjectName("neon_btn_active")
+        self.btn_lang_en = QPushButton("英语 (EN)")
+        self.btn_lang_en.setObjectName("seg_btn_active")
         self.btn_lang_en.setCursor(Qt.PointingHandCursor)
         self.btn_lang_en.clicked.connect(lambda: self.set_language("en"))
         segment_row.addWidget(self.btn_lang_en, 1)
 
-        self.btn_lang_ja = QPushButton("🇯🇵 日语 (JA)")
-        self.btn_lang_ja.setObjectName("neon_btn_inactive")
+        self.btn_lang_ja = QPushButton("日语 (JA)")
+        self.btn_lang_ja.setObjectName("seg_btn_inactive")
         self.btn_lang_ja.setCursor(Qt.PointingHandCursor)
         self.btn_lang_ja.clicked.connect(lambda: self.set_language("ja"))
         segment_row.addWidget(self.btn_lang_ja, 1)
 
-        outer_layout.addLayout(segment_row)
+        outer_layout.addWidget(seg_box)
 
         # ── 3. 神经网络发音角色卡 ──
         voice_sec_row = QHBoxLayout()
-        voice_title = QLabel("神经网络角色")
-        voice_title.setObjectName("cyber_section_title")
+        voice_title = QLabel("发音角色")
+        voice_title.setObjectName("section_title")
         voice_sec_row.addWidget(voice_title)
         voice_sec_row.addStretch()
 
@@ -134,25 +144,22 @@ class VoiceParamPanel(QWidget):
         outer_layout.addLayout(voice_sec_row)
 
         voice_card = QFrame()
-        voice_card.setObjectName("cyber_card_inner")
+        voice_card.setObjectName("subtle_inner_card")
         card_layout = QVBoxLayout(voice_card)
         card_layout.setContentsMargins(10, 10, 10, 10)
         card_layout.setSpacing(8)
 
         self.voice_combo = QComboBox()
-        self.voice_combo.setObjectName("cyber_combo")
         self.voice_combo.currentIndexChanged.connect(self._on_combo_changed)
         card_layout.addWidget(self.voice_combo)
 
         meta_row = QHBoxLayout()
         self.accent_lbl = QLabel("美式英语 · 女声")
-        self.accent_lbl.setStyleSheet("color: #94a3b8; font-size: 11px; background: transparent;")
         meta_row.addWidget(self.accent_lbl)
         meta_row.addStretch()
 
-        spec_lbl = QLabel("24kHz 声学模型")
-        spec_lbl.setStyleSheet("color: #06b6d4; font-size: 10px; font-weight: 600; background: transparent;")
-        meta_row.addWidget(spec_lbl)
+        self._spec_lbl = QLabel("24kHz 神经音色")
+        meta_row.addWidget(self._spec_lbl)
 
         card_layout.addLayout(meta_row)
         outer_layout.addWidget(voice_card)
@@ -160,23 +167,22 @@ class VoiceParamPanel(QWidget):
         # ── 4. 跟读步频与芯片按键 ──
         speed_sec_row = QHBoxLayout()
         speed_title = QLabel("跟读步频")
-        speed_title.setObjectName("cyber_section_title")
+        speed_title.setObjectName("section_title")
         speed_sec_row.addWidget(speed_title)
         speed_sec_row.addStretch()
 
         self.speed_badge = QLabel("1.0×")
-        self.speed_badge.setObjectName("speed_cyber_badge")
+        self.speed_badge.setObjectName("speed_badge")
         speed_sec_row.addWidget(self.speed_badge)
         outer_layout.addLayout(speed_sec_row)
 
         speed_box = QFrame()
-        speed_box.setObjectName("cyber_card_inner")
+        speed_box.setObjectName("subtle_inner_card")
         speed_box_layout = QVBoxLayout(speed_box)
         speed_box_layout.setContentsMargins(10, 10, 10, 10)
         speed_box_layout.setSpacing(10)
 
         self.speed_slider = QSlider(Qt.Horizontal)
-        self.speed_slider.setObjectName("cyber_slider")
         self.speed_slider.setRange(50, 200)   # 0.5x ~ 2.0x (×100)
         self.speed_slider.setValue(100)
         self.speed_slider.setTickInterval(10)
@@ -207,28 +213,43 @@ class VoiceParamPanel(QWidget):
         speed_box_layout.addLayout(chips_row)
         outer_layout.addWidget(speed_box)
 
-        # ── 5. 底部声学规格注脚 ──
+        # ── 5. 底部声学规格 Callout ──
         spec_card = QFrame()
         spec_card.setObjectName("neural_spec_card")
         spec_layout = QVBoxLayout(spec_card)
-        spec_layout.setContentsMargins(10, 10, 10, 10)
+        spec_layout.setContentsMargins(12, 10, 12, 10)
         spec_layout.setSpacing(4)
 
-        spec_header = QLabel("⚡ 微软神经语流渲染")
+        spec_header = QLabel("微软神经语流直通")
         spec_header.setObjectName("neural_spec_title")
         spec_layout.addWidget(spec_header)
 
-        spec_body = QLabel("端到端深度神经网络直通，提供拟真连读音变与停顿韵律，跟读延迟低至 120ms。")
+        spec_body = QLabel("端到端深度神经网络提供拟真连读音变与停顿韵律，支持英/日双语快速切换。")
         spec_body.setObjectName("neural_spec_body")
         spec_body.setWordWrap(True)
         spec_layout.addWidget(spec_body)
 
         outer_layout.addWidget(spec_card)
 
-        # 外部布局包裹
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.addWidget(outer)
+
+        self.set_theme(self._theme)
+
+    def set_theme(self, mode: str):
+        self._theme = normalize_theme(mode)
+        t = get_tokens(self._theme)
+        self.wave_widget.set_theme(self._theme)
+        self._lang_active_lbl.setStyleSheet(
+            f"color: {t['text_3']}; font-size: 10px; font-weight: 700; background: transparent;"
+        )
+        self.accent_lbl.setStyleSheet(
+            f"color: {t['text_2']}; font-size: 11px; background: transparent;"
+        )
+        self._spec_lbl.setStyleSheet(
+            f"color: {t['blue']}; font-size: 10.5px; font-weight: 600; background: transparent;"
+        )
 
     # ────────────────────────── 逻辑与交互 ──────────────────────────
 
@@ -256,7 +277,6 @@ class VoiceParamPanel(QWidget):
             else:
                 self._preferred_voice_en = voice_id
 
-            # 更新角色口音与快捷标签
             self._update_voice_metadata(voice_id)
             self.voice_changed.emit(voice_id)
 
@@ -273,13 +293,12 @@ class VoiceParamPanel(QWidget):
             lang = "en"
         self._current_lang = lang
 
-        # 更新霓虹分段按钮样式
         if lang == "ja":
-            self.btn_lang_ja.setObjectName("neon_btn_active")
-            self.btn_lang_en.setObjectName("neon_btn_inactive")
+            self.btn_lang_ja.setObjectName("seg_btn_active")
+            self.btn_lang_en.setObjectName("seg_btn_inactive")
         else:
-            self.btn_lang_en.setObjectName("neon_btn_active")
-            self.btn_lang_ja.setObjectName("neon_btn_inactive")
+            self.btn_lang_en.setObjectName("seg_btn_active")
+            self.btn_lang_ja.setObjectName("seg_btn_inactive")
 
         for btn in (self.btn_lang_en, self.btn_lang_ja):
             btn.style().unpolish(btn)
@@ -308,7 +327,6 @@ class VoiceParamPanel(QWidget):
         self.voice_combo.blockSignals(True)
         self.voice_combo.clear()
 
-        # 根据当前语种过滤
         filtered = [
             v for v in self._all_voices
             if v.language.lower().startswith(self._current_lang)
@@ -322,7 +340,6 @@ class VoiceParamPanel(QWidget):
 
         for v in filtered:
             lang = v.language
-            # 添加分组标题
             if lang != prev_lang:
                 self.voice_combo.addItem(f"── {lang} ──")
                 idx = self.voice_combo.count() - 1
@@ -336,7 +353,6 @@ class VoiceParamPanel(QWidget):
             if v.voice_id == preferred_id:
                 target_idx = current_idx
 
-        # 若未匹配到 preferred_id，寻找第一个可用的语音项
         if target_idx == 0:
             for i in range(self.voice_combo.count()):
                 item = self.voice_combo.model().item(i)
